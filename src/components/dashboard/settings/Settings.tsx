@@ -308,9 +308,9 @@ export default function Settings() {
             <div>
               <label className="text-sm font-medium text-foreground">API Key</label>
               <div className="flex gap-2 mt-2">
-                {/* <code className="flex-1 bg-muted px-3 py-2 rounded text-sm text-muted-foreground overflow-hidden text-ellipsis">
+                <code className="flex-1 bg-muted px-3 py-2 rounded text-sm text-muted-foreground overflow-hidden text-ellipsis">
                   {process.env.NEXT_PUBLIC_API_KEY}
-                </code> */}
+                </code>
                 <Button size="sm" variant="outline">
                   Copy
                 </Button>
