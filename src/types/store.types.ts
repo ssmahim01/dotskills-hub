@@ -14,7 +14,7 @@ export interface Store {
   status: StoreStatus;
   createdAt: string;
   updatedAt: string;
-  subscriptionId?: string; 
+  subscriptionId?: string;
   totalProducts?: number;
   totalOrders?: number;
   totalRevenue?: number;
@@ -44,7 +44,16 @@ export interface UpdateStorePayload {
   storeName?: string;
   customDomain?: string;
   phone?: string;
-  stats?: Partial<Pick<Store, 'totalProducts' | 'totalOrders' | 'totalRevenue' | 'lastActivityAt'>>;
+  stats?: Partial<
+    Pick<
+      Store,
+      "totalProducts" | "totalOrders" | "totalRevenue" | "lastActivityAt"
+    >
+  >;
   subscriptionId?: string;
   status?: StoreStatus;
+  totalProducts?: number;
+  totalOrders?: number;
+  totalRevenue?: number;
+  lastActivityAt?: string;
 }

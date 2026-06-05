@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/utils/formatters";
-import { UserManagement } from "@/lib/types/user.types";
+import { UserManagement } from "@/types/user.types";
 import { Plus, Edit2, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -93,8 +93,7 @@ export default function UsersManagement() {
       name: user.name,
       email: user.email,
       role: user.role,
-      status: user?.status,
-    });
+      status: (user.status === "active" || user.status === "inactive" ? user.status : "active") as "active" | "inactive",});
     setFormErrors({});
     setEditDialogOpen(true);
   };
@@ -201,7 +200,7 @@ export default function UsersManagement() {
       ),
     },
     {
-      key: "actions",
+      key: "id",
       label: "Actions",
       render: (user) => (
         <div className="flex gap-2">

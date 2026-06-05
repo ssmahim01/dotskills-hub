@@ -1,11 +1,11 @@
-import { UserRole, UserStatus } from './auth.types';
+import { UserRole, UserStatus } from "./auth.types";
 
 export interface UserManagement {
   id: string;
   name: string;
   email: string;
   role: UserRole;
-  status?: string;
+  status?: UserStatus;
   createdAt: string;
   lastLoginAt?: string;
   storeId?: string;
@@ -14,7 +14,8 @@ export interface UserManagement {
 export interface CreateUserPayload {
   name: string;
   email: string;
-  password: string;
+  password?: string;
+  status?: UserStatus;
   role: UserRole;
   storeId?: string;
 }

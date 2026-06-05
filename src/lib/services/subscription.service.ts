@@ -1,4 +1,4 @@
-import { Subscription, SubscriptionStatus } from '../types/subscription.types';
+import { Subscription, SubscriptionStatus } from '../../types/subscription.types';
 import { getStorage, setStorage } from './localStorage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { seedSubscriptions } from './seed-data';

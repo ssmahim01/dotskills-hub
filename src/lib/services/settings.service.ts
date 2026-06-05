@@ -1,4 +1,4 @@
-import { PlatformSettings, UpdateSettingsPayload } from '../types/settings.types';
+import { PlatformSettings, UpdateSettingsPayload } from '../../types/settings.types';
 import { getStorage, setStorage } from './localStorage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { seedSettings } from './seed-data';

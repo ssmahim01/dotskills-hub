@@ -1,4 +1,4 @@
-import { User, AuthSession, LoginPayload, RegisterPayload } from '../types/auth.types';
+import { User, AuthSession, LoginPayload, RegisterPayload } from '../../types/auth.types';
 import { getStorage, setStorage, removeStorage } from './localStorage';
 import { STORAGE_KEYS } from '../utils/constants';
 import { seedUsers } from './seed-data';

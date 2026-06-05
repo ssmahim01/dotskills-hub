@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate, formatCurrency } from '@/lib/utils/formatters';
-import { Store } from '@/lib/types/store.types';
+import { Store } from '@/types/store.types';
 import { Plus, Edit2, Pause, Play, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 

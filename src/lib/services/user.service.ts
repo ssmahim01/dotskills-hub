@@ -1,4 +1,4 @@
-import { UserManagement, CreateUserPayload, UpdateUserPayload } from '../types/user.types';
+import { UserManagement, CreateUserPayload, UpdateUserPayload } from '../../types/user.types';
 import { getStorage, setStorage } from './localStorage';
 import { seedUserManagement } from './seed-data';
 

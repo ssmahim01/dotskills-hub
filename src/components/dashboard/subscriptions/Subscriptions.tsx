@@ -20,7 +20,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDate, formatCurrency } from '@/lib/utils/formatters';
-import { Subscription } from '@/lib/types/subscription.types';
+import { Subscription } from '@/types/subscription.types';
 import { Plus, CheckCircle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 

@@ -1,8 +1,8 @@
-import { User } from '../types/auth.types';
-import { Subscription } from '../types/subscription.types';
-import { Store } from '../types/store.types';
-import { UserManagement } from '../types/user.types';
-import { PlatformSettings } from '../types/settings.types';
+import { User } from '../../types/auth.types';
+import { Subscription } from '../../types/subscription.types';
+import { Store } from '../../types/store.types';
+import { UserManagement } from '../../types/user.types';
+import { PlatformSettings } from '../../types/settings.types';
 
 export const seedUsers: User[] = [
   {

@@ -1,4 +1,4 @@
-import { PricingTier } from '../types/subscription.types';
+import { PricingTier } from '../../types/subscription.types';
 
 export const APP_NAME = 'DotSkillsHub';
 export const APP_DESCRIPTION = 'Multi-tenant E-Commerce SaaS Platform';

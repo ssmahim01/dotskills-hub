@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
-import { User, AuthSession } from "../types/auth.types";
+import { User, AuthSession } from "../../types/auth.types";
 import { authService } from "../services/auth.service";
 import { userService } from "../services/user.service";
 

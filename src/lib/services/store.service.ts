@@ -1,7 +1,12 @@
-import { Store, CreateStorePayload, UpdateStorePayload, StoreStatus } from '../types/store.types';
-import { getStorage, setStorage } from './localStorage';
-import { STORAGE_KEYS } from '../utils/constants';
-import { seedStores } from './seed-data';
+import {
+  Store,
+  CreateStorePayload,
+  UpdateStorePayload,
+  StoreStatus,
+} from "../../types/store.types";
+import { getStorage, setStorage } from "./localStorage";
+import { STORAGE_KEYS } from "../utils/constants";
+import { seedStores } from "./seed-data";
 
 class StoreService {
   private readonly storageKey = STORAGE_KEYS.STORES;
@@ -42,7 +47,7 @@ class StoreService {
    * Get active stores
    */
   getActive(): Store[] {
-    return this.getByStatus('active');
+    return this.getByStatus("active");
   }
 
   /**
@@ -63,10 +68,14 @@ class StoreService {
   /**
    * Create new store
    */
-  create(payload: CreateStorePayload): { success: boolean; store?: Store; error?: string } {
+  create(payload: CreateStorePayload): {
+    success: boolean;
+    store?: Store;
+    error?: string;
+  } {
     // Check subdomain availability
     if (!this.isSubdomainAvailable(payload.subdomain)) {
-      return { success: false, error: 'Subdomain already taken' };
+      return { success: false, error: "Subdomain already taken" };
     }
 
     const stores = this.getAll();
@@ -78,7 +87,7 @@ class StoreService {
       ownerEmail: payload.ownerEmail,
       phone: payload.phone,
       package: payload.package,
-      status: 'active',
+      status: "active",
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       totalProducts: 0,
@@ -94,12 +103,15 @@ class StoreService {
   /**
    * Update store
    */
-  update(id: string, payload: UpdateStorePayload): { success: boolean; store?: Store; error?: string } {
+  update(
+    id: string,
+    payload: UpdateStorePayload,
+  ): { success: boolean; store?: Store; error?: string } {
     const stores = this.getAll();
     const index = stores.findIndex((s) => s.id === id);
 
     if (index === -1) {
-      return { success: false, error: 'Store not found' };
+      return { success: false, error: "Store not found" };
     }
 
     const updatedStore = {
@@ -130,14 +142,14 @@ class StoreService {
    * Activate store
    */
   activate(id: string): Store | undefined {
-    return this.update(id, { status: 'active' }).store;
+    return this.update(id, { status: "active" }).store;
   }
 
   /**
    * Suspend store
    */
   suspend(id: string): Store | undefined {
-    return this.update(id, { status: 'suspended' }).store;
+    return this.update(id, { status: "suspended" }).store;
   }
 
   /**
@@ -159,7 +171,10 @@ class StoreService {
    */
   getTotalRevenue(): number {
     const stores = this.getAll();
-    return stores.reduce((total, store) => total + (store.totalRevenue || 0), 0);
+    return stores.reduce(
+      (total, store) => total + (store.totalRevenue || 0),
+      0,
+    );
   }
 
   /**
@@ -167,7 +182,10 @@ class StoreService {
    */
   getTotalProducts(): number {
     const stores = this.getAll();
-    return stores.reduce((total, store) => total + (store.totalProducts || 0), 0);
+    return stores.reduce(
+      (total, store) => total + (store.totalProducts || 0),
+      0,
+    );
   }
 
   /**
@@ -184,11 +202,12 @@ class StoreService {
   search(query: string): Store[] {
     const stores = this.getAll();
     const lowerQuery = query.toLowerCase();
-    return stores.filter((s) =>
-      s.storeName.toLowerCase().includes(lowerQuery) ||
-      s.subdomain.toLowerCase().includes(lowerQuery) ||
-      s.ownerName.toLowerCase().includes(lowerQuery) ||
-      s.ownerEmail.toLowerCase().includes(lowerQuery)
+    return stores.filter(
+      (s) =>
+        s.storeName.toLowerCase().includes(lowerQuery) ||
+        s.subdomain.toLowerCase().includes(lowerQuery) ||
+        s.ownerName.toLowerCase().includes(lowerQuery) ||
+        s.ownerEmail.toLowerCase().includes(lowerQuery),
     );
   }
 
@@ -206,7 +225,10 @@ class StoreService {
   getRecent(limit = 5): Store[] {
     const stores = this.getAll();
     return stores
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      )
       .slice(0, limit);
   }
 
@@ -215,7 +237,12 @@ class StoreService {
    */
   updateStats(
     id: string,
-    stats: { totalProducts?: number; totalOrders?: number; totalRevenue?: number; lastActivityAt?: string }
+    stats: {
+      totalProducts?: number;
+      totalOrders?: number;
+      totalRevenue?: number;
+      lastActivityAt?: string;
+    },
   ): Store | undefined {
     return this.update(id, stats)?.store;
   }

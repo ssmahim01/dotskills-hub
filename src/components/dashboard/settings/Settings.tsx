@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { PlatformSettings } from '@/lib/types/settings.types';
+import { PlatformSettings } from '@/types/settings.types';
 import { Loader2, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
