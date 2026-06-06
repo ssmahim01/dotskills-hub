@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ROUTES, PRICING_TIERS } from '@/lib/utils/constants';
-import { formatCurrency } from '@/lib/utils/formatters';
-import { Check, ArrowLeft } from 'lucide-react';
+import React from "react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ROUTES, PRICING_TIERS } from "@/lib/utils/constants";
+import { formatCurrency } from "@/lib/utils/formatters";
+import { Check, ArrowLeft } from "lucide-react";
 
 export default function Pricing() {
   return (
@@ -30,7 +30,8 @@ export default function Pricing() {
             Simple, Transparent Pricing
           </h1>
           <p className="text-xl text-muted-foreground">
-            Choose the perfect plan for your business. Upgrade or downgrade anytime.
+            Choose the perfect plan for your business. Upgrade or downgrade
+            anytime.
           </p>
         </div>
       </section>
@@ -43,21 +44,25 @@ export default function Pricing() {
               <div
                 key={plan.id}
                 className={`rounded-lg border p-8 transition-all flex flex-col ${
-                  plan.id === 'business'
-                    ? 'border-primary bg-primary/5 transform md:scale-105'
-                    : 'border-border bg-card'
+                  plan.id === "business"
+                    ? "border-primary bg-primary/5 transform md:scale-105"
+                    : "border-border bg-card"
                 }`}
               >
                 {/* Popular Badge */}
-                {plan.id === 'business' && (
+                {plan.id === "business" && (
                   <div className="inline-block px-4 py-1 bg-primary text-primary-foreground rounded-full text-sm font-semibold mb-4 w-fit">
                     Most Popular
                   </div>
                 )}
 
                 {/* Title & Description */}
-                <h3 className="text-2xl font-bold text-foreground">{plan.displayName}</h3>
-                <p className="text-muted-foreground mt-2 flex-1">{plan.description}</p>
+                <h3 className="text-2xl font-bold text-foreground">
+                  {plan.displayName}
+                </h3>
+                <p className="text-muted-foreground mt-2 flex-1">
+                  {plan.description}
+                </p>
 
                 {/* Price */}
                 <div className="mt-6 mb-6">
@@ -68,10 +73,10 @@ export default function Pricing() {
                 </div>
 
                 {/* CTA Button */}
-                <Link href={ROUTES.REGISTER} className="mb-8">
+                <Link href={`/register?plan=${plan.id}`} className="mb-8">
                   <Button
                     className="w-full"
-                    variant={plan.id === 'business' ? 'default' : 'outline'}
+                    variant={plan.id === "business" ? "default" : "outline"}
                     size="lg"
                   >
                     Get Started
@@ -80,7 +85,9 @@ export default function Pricing() {
 
                 {/* Features */}
                 <div className="space-y-4 flex-1">
-                  <p className="text-sm font-semibold text-foreground mb-4">Includes:</p>
+                  <p className="text-sm font-semibold text-foreground mb-4">
+                    Includes:
+                  </p>
                   {plan.features.map((feature, idx) => (
                     <div key={idx} className="flex items-start gap-3">
                       <Check className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0 mt-0.5" />
@@ -93,12 +100,14 @@ export default function Pricing() {
                 <div className="mt-8 pt-8 border-t border-border space-y-2 text-sm text-muted-foreground">
                   <div className="flex justify-between">
                     <span>Storage</span>
-                    <span className="font-semibold text-foreground">{plan.storageGB}GB</span>
+                    <span className="font-semibold text-foreground">
+                      {plan.storageGB}GB
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Monthly Requests</span>
                     <span className="font-semibold text-foreground">
-                      {plan.monthlyRequests >= 1000000 
+                      {plan.monthlyRequests >= 1000000
                         ? `${(plan.monthlyRequests / 1000000).toFixed(0)}M`
                         : `${(plan.monthlyRequests / 1000).toFixed(0)}K`}
                     </span>
@@ -106,7 +115,7 @@ export default function Pricing() {
                   <div className="flex justify-between">
                     <span>Team Members</span>
                     <span className="font-semibold text-foreground">
-                      {plan.users === 9999 ? 'Unlimited' : plan.users}
+                      {plan.users === 9999 ? "Unlimited" : plan.users}
                     </span>
                   </div>
                 </div>
@@ -126,28 +135,28 @@ export default function Pricing() {
           <div className="space-y-6">
             {[
               {
-                q: 'Can I change my plan later?',
-                a: 'Yes! You can upgrade or downgrade your plan anytime. Changes take effect at the next billing cycle.',
+                q: "Can I change my plan later?",
+                a: "Yes! You can upgrade or downgrade your plan anytime. Changes take effect at the next billing cycle.",
               },
               {
-                q: 'What payment methods do you accept?',
-                a: 'We accept bKash, Nagad, Bank Transfer, and all major credit cards. Flexible payment terms available for enterprise plans.',
+                q: "What payment methods do you accept?",
+                a: "We accept bKash, Nagad, Bank Transfer, and all major credit cards. Flexible payment terms available for enterprise plans.",
               },
               {
-                q: 'Is there a free trial?',
-                a: 'Yes! All new accounts get a 14-day free trial. No credit card required to get started.',
+                q: "Is there a free trial?",
+                a: "Yes! All new accounts get a 14-day free trial. No credit card required to get started.",
               },
               {
-                q: 'What if I need more resources?',
-                a: 'Contact our sales team for custom enterprise plans tailored to your specific needs.',
+                q: "What if I need more resources?",
+                a: "Contact our sales team for custom enterprise plans tailored to your specific needs.",
               },
               {
-                q: 'Do you offer discounts for annual billing?',
-                a: 'Yes! Save 20% when you choose annual billing instead of monthly.',
+                q: "Do you offer discounts for annual billing?",
+                a: "Yes! Save 20% when you choose annual billing instead of monthly.",
               },
               {
-                q: 'What&apos;s included in support?',
-                a: 'All plans include email support. Starter includes community support, Business and Enterprise get priority support.',
+                q: "What&apos;s included in support?",
+                a: "All plans include email support. Starter includes community support, Business and Enterprise get priority support.",
               },
             ].map((item, idx) => (
               <div key={idx} className="border border-border rounded-lg p-6">
@@ -162,7 +171,9 @@ export default function Pricing() {
       {/* CTA Section */}
       <section className="py-16 px-4">
         <div className="max-w-3xl mx-auto text-center space-y-6">
-          <h2 className="text-3xl font-bold text-foreground">Ready to get started?</h2>
+          <h2 className="text-3xl font-bold text-foreground">
+            Ready to get started?
+          </h2>
           <p className="text-lg text-muted-foreground">
             Join thousands of successful merchants using DotSkillsHub
           </p>

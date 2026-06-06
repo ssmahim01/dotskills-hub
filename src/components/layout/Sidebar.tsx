@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Menu,
   X,
@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '@/lib/utils/constants';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
+import { useUser } from '@/context/UserContext';
+import { toast } from 'sonner';
 
 interface NavItem {
   href: string;
@@ -32,14 +34,19 @@ const dashboardItems: NavItem[] = [
   { href: ROUTES.SETTINGS, label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 
-export interface SidebarProps {
-  onLogout?: () => void;
-}
-
-export function Sidebar({ onLogout }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const { logout } = useUser();
+      const router = useRouter()
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success("Logout successful")
+    router.push("/")
+
+  }
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const { value: savedExpanded, setValue: setSavedExpanded } = useLocalStorage(
     'dotskills_sidebar_collapsed',
@@ -132,7 +139,7 @@ export function Sidebar({ onLogout }: SidebarProps) {
       {/* Footer */}
       <div className="border-t border-border p-4">
         <button
-          onClick={onLogout}
+          onClick={handleLogout}
           className={`
             flex items-center gap-3 px-3 py-2.5 rounded-lg
             w-full text-foreground hover:bg-accent

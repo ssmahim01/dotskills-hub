@@ -1,4 +1,5 @@
-import { UserRole, UserStatus } from "./auth.types";
+import { UserRole } from "./auth.types";
+import { UserStatus } from "./auth.types";
 
 export interface UserManagement {
   id: string;

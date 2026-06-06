@@ -66,13 +66,13 @@ export default function Home() {
           </div>
 
           {/* Demo Credentials */}
-          <div className="mt-8 bg-card border border-border rounded-lg p-6 inline-block text-left">
+          {/* <div className="mt-8 bg-card border border-border rounded-lg p-6 inline-block text-left">
             <p className="text-sm font-semibold text-muted-foreground mb-3">Demo Login:</p>
             <div className="space-y-2 text-sm">
               <p>Email: <code className="bg-muted px-2 py-1 rounded">admin@dotskills.com</code></p>
               <p>Password: <code className="bg-muted px-2 py-1 rounded">admin123</code></p>
             </div>
-          </div>
+          </div> */}
         </div>
       </section>
 

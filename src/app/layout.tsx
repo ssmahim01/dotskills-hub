@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 import { ThemeProvider } from '@/lib/providers/ThemeProvider'
 import { initializeStorageWithSeedData } from '@/lib/services/seed-data'
+import { UserProvider } from '@/context/UserContext'
 
 export const metadata: Metadata = {
   title: 'DotSkillsHub - E-Commerce SaaS Platform',
@@ -39,9 +40,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background text-foreground">
-        <ThemeProvider>
+      <UserProvider>
+          <ThemeProvider>
           {children}
         </ThemeProvider>
+      </UserProvider>
         {/* {process.env.NODE_ENV === 'production' && <Analytics />} */}
       </body>
     </html>
