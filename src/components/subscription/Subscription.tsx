@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/incompatible-library */
 "use client";
 
@@ -22,12 +23,10 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 
 import { useGetSinglePlanQuery } from "@/redux/features/Plan/plan.api";
 import { useCreateSubscriptionMutation } from "@/redux/features/Subscription/subscription.api";
-
 
 const subscriptionSchema = z.object({
   ownerName: z.string().min(2, "Name must be at least 2 characters"),
@@ -60,7 +59,7 @@ const subscriptionSchema = z.object({
       { message: "Enter a valid domain (e.g. mystore.com)" },
     ),
   paymentMethod: z.enum(["BKASH", "NAGAD", "ROCKET", "BANK", "MANUAL"], {
-    required_error: "Select a payment method",
+    message: "Select a payment method",
   }),
   transactionId: z.string().min(4, "Transaction ID is required"),
   durationInMonths: z.coerce
@@ -99,10 +98,13 @@ export default function SubscriptionApply() {
   const [isSuccess, setIsSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: planData, isLoading: planLoading, isError: planError } =
-    useGetSinglePlanQuery(planId ?? "", { skip: !planId });
+  const {
+    data: planData,
+    isLoading: planLoading,
+    isError: planError,
+  } = useGetSinglePlanQuery(planId ?? "", { skip: !planId });
 
-  const [createSubscription, { isLoading: submitting, error: submitError }] =
+  const [createSubscription, { isLoading: submitting }] =
     useCreateSubscriptionMutation();
 
   const {
@@ -112,7 +114,7 @@ export default function SubscriptionApply() {
     watch,
     formState: { errors },
   } = useForm<SubscriptionFormValues>({
-    resolver: zodResolver(subscriptionSchema),
+    resolver: zodResolver(subscriptionSchema as any),
     defaultValues: {
       durationInMonths: 1,
     },
@@ -207,12 +209,20 @@ export default function SubscriptionApply() {
 
   const plan = planData?.data;
   const durationInMonths = watch("durationInMonths") ?? 1;
-  const estimatedAmount =
-    plan
-      ? durationInMonths >= 12 && plan.yearlyPrice
-        ? plan.yearlyPrice
-        : plan.monthlyPrice * durationInMonths
-      : 0;
+  const estimatedAmount = plan
+    ? durationInMonths >= 12 && plan.yearlyPrice
+      ? plan.yearlyPrice
+      : plan.monthlyPrice * durationInMonths
+    : 0;
+
+  // {submitError && (
+  //         <Alert variant="destructive">
+  //           <AlertDescription>
+  //             {(submitError as { data?: { message?: string } })?.data
+  //               ?.message ?? "Something went wrong. Please try again."}
+  //           </AlertDescription>
+  //         </Alert>
+  //       )}
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,19 +245,7 @@ export default function SubscriptionApply() {
 
       <div className="max-w-6xl mx-auto px-4 py-10">
         <div className="grid lg:grid-cols-[1fr_360px] gap-8 items-start">
-
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-
-            {/* Server error */}
-            {submitError && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {(submitError as { data?: { message?: string } })?.data
-                    ?.message ?? "Something went wrong. Please try again."}
-                </AlertDescription>
-              </Alert>
-            )}
-
             {/* Business Information */}
             <fieldset className="bg-card border border-border rounded-2xl p-6 space-y-5">
               <legend className="text-base font-semibold text-foreground px-1">
@@ -255,11 +253,19 @@ export default function SubscriptionApply() {
               </legend>
 
               <div className="grid sm:grid-cols-2 gap-5">
-                <Field label="Owner Name" error={errors.ownerName?.message} required>
+                <Field
+                  label="Owner Name"
+                  error={errors.ownerName?.message}
+                  required
+                >
                   <Input placeholder="John Doe" {...register("ownerName")} />
                 </Field>
 
-                <Field label="Owner Email" error={errors.ownerEmail?.message} required>
+                <Field
+                  label="Owner Email"
+                  error={errors.ownerEmail?.message}
+                  required
+                >
                   <Input
                     type="email"
                     placeholder="john@example.com"
@@ -267,14 +273,22 @@ export default function SubscriptionApply() {
                   />
                 </Field>
 
-                <Field label="Phone Number" error={errors.ownerPhone?.message} required>
+                <Field
+                  label="Phone Number"
+                  error={errors.ownerPhone?.message}
+                  required
+                >
                   <Input
                     placeholder="01XXXXXXXXX"
                     {...register("ownerPhone")}
                   />
                 </Field>
 
-                <Field label="Store Name" error={errors.storeName?.message} required>
+                <Field
+                  label="Store Name"
+                  error={errors.storeName?.message}
+                  required
+                >
                   <Input
                     placeholder="My Awesome Store"
                     {...register("storeName")}
@@ -517,7 +531,10 @@ export default function SubscriptionApply() {
                       Plan includes
                     </p>
                     {plan.features.slice(0, 5).map((f, i) => (
-                      <div key={i} className="flex items-start gap-2 text-xs text-foreground">
+                      <div
+                        key={i}
+                        className="flex items-start gap-2 text-xs text-foreground"
+                      >
                         <CheckCircle2 className="w-3.5 h-3.5 text-green-500 shrink-0 mt-0.5" />
                         {f.title}
                       </div>
@@ -582,10 +599,20 @@ function SummaryRow({
 }) {
   return (
     <div className="flex justify-between items-center">
-      <span className={highlight ? "font-semibold text-foreground" : "text-muted-foreground"}>
+      <span
+        className={
+          highlight ? "font-semibold text-foreground" : "text-muted-foreground"
+        }
+      >
         {label}
       </span>
-      <span className={highlight ? "font-bold text-foreground text-base" : "text-foreground font-medium"}>
+      <span
+        className={
+          highlight
+            ? "font-bold text-foreground text-base"
+            : "text-foreground font-medium"
+        }
+      >
         {value}
       </span>
     </div>

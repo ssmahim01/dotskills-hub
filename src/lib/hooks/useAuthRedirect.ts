@@ -3,18 +3,6 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
-/**
- * useAuthRedirect
- *
- * Handles the SaaS "plan → login → back to plan" flow.
- *
- * Usage in login/register page:
- *   const { getRedirectUrl, redirectAfterAuth } = useAuthRedirect();
- *
- * Usage when a visitor clicks a plan:
- *   router.push(buildPlanAuthUrl(planId));
- */
-
 const DEFAULT_REDIRECT = "/dashboard";
 
 export function buildPlanAuthUrl(planId: string): string {

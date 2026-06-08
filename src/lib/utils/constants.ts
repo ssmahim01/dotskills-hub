@@ -136,10 +136,11 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
-
+  
   // Protected
   DASHBOARD: '/dashboard',
   SUBSCRIPTIONS: '/dashboard/subscriptions',
+  PLANS: '/dashboard/pricing-plans',
   STORES: '/dashboard/stores',
   USERS: '/dashboard/users',
   SETTINGS: '/dashboard/settings',
