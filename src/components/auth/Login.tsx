@@ -23,6 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 const loginSchema = z.object({
   email: z
@@ -63,6 +64,7 @@ const highlights = [
 export default function Login() {
   const router = useRouter();
   const { login } = useUser();
+  const { redirectAfterAuth } = useAuthRedirect();
 
   const {
     register,
@@ -86,6 +88,7 @@ export default function Login() {
       } else {
         router.push("/");
       }
+      redirectAfterAuth();
     } else {
       setError("root", {
         message: res.message || "Invalid email or password. Please try again.",

@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { loginUser } from "@/utils/loginUser";
 import { useUser } from "@/context/UserContext";
 import { cn } from "@/lib/utils";
+import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
 
 const registerSchema = z
   .object({
@@ -114,6 +115,7 @@ function Field({
 export default function Register() {
   const router = useRouter();
   const { login } = useUser();
+  const { redirectAfterAuth } = useAuthRedirect();
 
   const {
     register,
@@ -158,6 +160,7 @@ export default function Register() {
       } else {
         router.push("/");
       }
+      redirectAfterAuth();
     } else {
       setError("root", {
         message: res.message || "Registration failed. Please try again.",
