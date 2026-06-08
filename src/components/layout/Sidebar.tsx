@@ -13,6 +13,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Brain,
 } from 'lucide-react';
 import { ROUTES } from '@/lib/utils/constants';
 import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
@@ -29,6 +30,7 @@ interface NavItem {
 const dashboardItems: NavItem[] = [
   { href: ROUTES.DASHBOARD, label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
   { href: ROUTES.SUBSCRIPTIONS, label: 'Subscriptions', icon: <Zap className="w-5 h-5" />, badge: 2 },
+  { href: ROUTES.PLANS, label: 'Pricing Plans', icon: <Brain className="w-5 h-5" /> },
   { href: ROUTES.STORES, label: 'Stores', icon: <ShoppingCart className="w-5 h-5" /> },
   { href: ROUTES.USERS, label: 'Users', icon: <Users className="w-5 h-5" /> },
   { href: ROUTES.SETTINGS, label: 'Settings', icon: <Settings className="w-5 h-5" /> },

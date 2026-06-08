@@ -8,6 +8,7 @@ import { logoutUser } from "@/utils/logoutUser";
 type User = {
   _id: string;
   email: string;
+  name: string;
   role: "CUSTOMER" | "OWNER" | "ADMIN";
 };
 

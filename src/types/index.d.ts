@@ -47,21 +47,12 @@ export interface ISidebarItem {
 
 export enum Role {
   ADMIN = "ADMIN",
-  MANAGER = "MANAGER",
-  MODERATOR = "MODERATOR",
-  TELLICELSS = "TELLICELSS",
+  OWNER = "OWNER",
 }
 export enum IsActive {
   ACTIVE = "ACTIVE",
   INACTIVE = "INACTIVE",
   BLOCKED = "BLOCKED",
-}
-
-export interface IPermission {
-  _id: string;
-  title: string;
-  url: string;
-  group: string;
 }
 
 export interface IUser {
@@ -70,15 +61,12 @@ export interface IUser {
   email: string;
   password?: string;
   phone?: string;
-  permissions?: IPermission[];
   address: string;
   status?: string;
   picture?: string;
   isActive?: IsActive;
   isVerified?: boolean;
   isDeleted?: boolean;
-  salary?: number;
-  commissionSalary?: number;
   role?: Role;
   createdAt?: string;
   updatedAt?: string;
@@ -86,95 +74,4 @@ export interface IUser {
 
 export interface IUserApiResponse {
   data: IUser;
-}
-
-export enum CategoryStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-}
-
-export interface ICategory {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  image: string;
-  status: CategoryStatus;
-  productCount: number;
-}
-
-export enum BrandStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-}
-
-export interface IBrand {
-  _id: string;
-  title: string;
-  slug: string;
-  description: string;
-  image: string;
-  productCount: number;
-  status: BrandStatus;
-}
-
-export enum ProductStatus {
-  ACTIVE = "ACTIVE",
-  INACTIVE = "INACTIVE",
-}
-
-// ------ product ---
-export interface IProduct {
-  quantity: ReactNode;
-  _id?: string;
-  barcode?: string;
-
-  // Basic Info
-  title: string;
-  totalRevenue: number;
-  isCusFavorite: boolean;
-  isFeatured: boolean;
-  brand: {
-    _id: string;
-    title: string;
-    slug: string;
-  };
-  category: {
-    _id: string;
-    title: string;
-    slug: string;
-    image: string[];
-  };
-  size?: string;
-  slug?: string;
-
-  // Pricing
-  price: number;
-  discountPrice?: number;
-  buyingPrice?: number;
-
-  // Stock / Availability
-  totalAddedStock?: number;
-  totalSold?: number;
-  availableStock?: number;
-  status: ProductStatus;
-  isDeleted?: boolean;
-  // Media
-  images: string[];
-
-  // Ratings & Reviews
-  ratings?: number;
-  reviews?: {
-    user: string;
-    rating: number;
-    comment: string;
-    date: Date;
-  }[];
-
-  // Description
-  description: string;
-
-  // Optional meta
-  createdAt?: Date;
-  updatedAt?: Date;
 }

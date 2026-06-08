@@ -77,7 +77,7 @@ export const subscriptionApi = baseApi.injectEndpoints({
 
     approveSubscription: builder.mutation<IResponse<ISubscription>, string>({
       query: (id) => ({
-        url: `/subscriptions/approve/${id}`,
+        url: `/subscriptions/${id}/approve`,
         method: "PATCH",
       }),
       invalidatesTags: (result, error, id) => [
