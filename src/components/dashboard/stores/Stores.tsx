@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/incompatible-library */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   useGetAllStoresQuery,
   useGetStoreAnalyticsQuery,
@@ -12,15 +13,17 @@ import {
   useUpdateStoreMutation,
   useCreateStoreMutation,
   IStore,
+  IPopulatedSubscription,
 } from "@/redux/features/Store/store.api";
-import { useGetAllPlansQuery, IPlan } from "@/redux/features/Plan/plan.api";
-import { useGetAllUsersQuery } from "@/redux/features/user/user.api";
+import {
+  useGetApprovedOwnersQuery,
+  ISubscription,
+} from "@/redux/features/Subscription/subscription.api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -73,7 +76,6 @@ import {
   Eye,
   Play,
   Pause,
-  TrendingUp,
   Package,
   ShoppingCart,
   Users,
@@ -85,28 +87,15 @@ import {
   LayoutGrid,
   List,
   Plus,
-  BadgeCheck,
-  Layers,
+  Info,
+  Upload,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Image from "next/image";
-import { IUser, Role } from "@/types/user.types";
-
-interface IPopulatedSubscription {
-  _id: string;
-  plan?: {
-    _id: string;
-    displayName: string;
-    monthlyPrice: number;
-  };
-  status?: string;
-  currentPeriodEnd: string;
-  expiresAt: string;
-}
 
 type IStoreWithSub = IStore & {
   currentSubscription?: IPopulatedSubscription | string | null;
@@ -128,21 +117,21 @@ function formatDate(d: string) {
   });
 }
 
-function getSubscriptionExpiry(store: any): string | null {
+function getSubscriptionExpiry(store: IStoreWithSub): string | null {
   const sub = store.currentSubscription;
   if (!sub || typeof sub === "string") return null;
-  return sub?.currentPeriodEnd ?? sub?.expiresAt ?? null;
+  return (sub as IPopulatedSubscription & { endDate?: string }).endDate ?? null;
 }
 
-function getSubscriptionPlanName(store: any): string | null {
+function getSubscriptionPlanName(store: IStoreWithSub): string | null {
   const sub = store.currentSubscription;
   if (!sub || typeof sub === "string") return null;
-  return sub?.plan?.displayName ?? null;
+  return (sub as IPopulatedSubscription).plan?.displayName ?? null;
 }
 
 function isSubscriptionPopulated(
   sub: IStoreWithSub["currentSubscription"],
-): sub is any {
+): sub is IPopulatedSubscription {
   return !!sub && typeof sub === "object";
 }
 
@@ -205,7 +194,7 @@ function StatCard({
 }) {
   return (
     <Card className="relative overflow-hidden border-0 shadow-sm bg-card">
-      <div className={cn("absolute inset-0 opacity-5", accent)} />
+      <div className={cn("absolute inset-0 opacity-5")} />
       <CardContent className="pt-6 pb-5">
         <div className="flex items-center justify-between">
           <div>
@@ -227,7 +216,7 @@ function StatCard({
   );
 }
 
-const businessTypes = [
+const BUSINESS_TYPES = [
   "ECOMMERCE",
   "FASHION",
   "ELECTRONICS",
@@ -237,48 +226,87 @@ const businessTypes = [
   "CUSTOM",
 ] as const;
 
-const createStoreSchema = z.object({
-  storeName: z.string().min(1, "Store name is required"),
-  owner: z.string().min(1, "Store owner is required"),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  phone: z.string().optional(),
+export const createStoreSchema = z.object({
+  currentSubscription: z
+    .string()
+    .min(1, "Please select an approved subscription"),
+
+  // Required fields
+  storeName: z
+    .string()
+    .min(1, "Store name is required")
+    .min(3, "Store name must be at least 3 characters")
+    .max(100, "Store name must not exceed 100 characters"),
+
+  owner: z.string().min(1, "Owner is required"),
+
   subdomain: z
     .string()
     .min(1, "Subdomain is required")
+    .min(3, "Subdomain must be at least 3 characters")
+    .max(50, "Subdomain must not exceed 50 characters")
     .regex(
       /^[a-z0-9-]+$/,
-      "Subdomain must be lowercase letters, numbers, and hyphens only",
+      "Subdomain can contain only lowercase letters, numbers and hyphens",
     ),
-  customDomain: z.string().optional(),
-  address: z.string().optional(),
-  businessType: z.enum(businessTypes).default("ECOMMERCE"),
-  description: z.string().optional(),
-  planId: z.string().optional(),
-  status: z
-    .enum(["PENDING", "ACTIVE", "SUSPENDED", "INACTIVE"])
-    .default("PENDING"),
-  isVerified: z.boolean().default(false),
+
+  // Optional fields
+  email: z.string().email("Invalid email address").optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  customDomain: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  businessType: z.enum(BUSINESS_TYPES).default("ECOMMERCE"),
+  description: z.string().optional().or(z.literal("")),
 });
 
 type CreateStoreValues = z.infer<typeof createStoreSchema>;
 
+// Edit store schema - excludes subscription and owner
+const editStoreSchema = z.object({
+  storeName: z
+    .string()
+    .min(1, "Store name is required")
+    .min(3, "Store name must be at least 3 characters"),
+  email: z.string().email("Invalid email").optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
+  customDomain: z.string().optional().or(z.literal("")),
+  subDomain: z.string().optional().or(z.literal("")),
+  address: z.string().optional().or(z.literal("")),
+  businessType: z.enum(BUSINESS_TYPES).default("ECOMMERCE"),
+  description: z.string().optional().or(z.literal("")),
+});
+
+type EditStoreValues = z.infer<typeof editStoreSchema>;
+
+interface CreateStoreDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
 function CreateStoreDialog({
   open,
   onClose,
-}: {
-  open: boolean;
-  onClose: () => void;
-}) {
-  const [createStore, { isLoading }] = useCreateStoreMutation();
-  const { data: plansData } = useGetAllPlansQuery({});
-  const { data: usersData } = useGetAllUsersQuery({});
+  onSuccess,
+}: CreateStoreDialogProps) {
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const logoInputRef = React.useRef<HTMLInputElement>(null);
+  const bannerInputRef = React.useRef<HTMLInputElement>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const plans: IPlan[] = plansData?.data ?? [];
-  const users: IUser[] = usersData?.data ?? [];
-  const storeOwners = users.filter((user) => user.role === Role.OWNER);
+  const [createStore, { isLoading: isCreating }] = useCreateStoreMutation();
+  const { data: approvedOwnersData, isLoading: ownersLoading } =
+    useGetApprovedOwnersQuery();
+
+  const approvedSubscriptions: ISubscription[] = useMemo(
+    () => approvedOwnersData?.data ?? [],
+    [approvedOwnersData],
+  );
 
   const {
     register,
+    control,
     handleSubmit,
     watch,
     setValue,
@@ -286,7 +314,9 @@ function CreateStoreDialog({
     formState: { errors },
   } = useForm<CreateStoreValues>({
     resolver: zodResolver(createStoreSchema as any),
+    mode: "onBlur",
     defaultValues: {
+      currentSubscription: "",
       storeName: "",
       owner: "",
       email: "",
@@ -296,179 +326,358 @@ function CreateStoreDialog({
       address: "",
       businessType: "ECOMMERCE",
       description: "",
-      planId: "",
-      status: "PENDING",
-      isVerified: false,
     },
   });
 
-  const statusValue = watch("status");
-  const businessTypeValue = watch("businessType");
-  const ownerValue = watch("owner");
-  const planIdValue = watch("planId");
-  const isVerifiedValue = watch("isVerified");
+  const currentSubscriptionValue = watch("currentSubscription");
   const storeNameValue = watch("storeName");
+  const selectedSubscription = useMemo(
+    () =>
+      approvedSubscriptions.find((s) => s._id === currentSubscriptionValue) ??
+      null,
+    [approvedSubscriptions, currentSubscriptionValue],
+  );
 
-  // Auto-generate subdomain from store name
+  // Auto-populate form when subscription is selected
   useEffect(() => {
-    if (storeNameValue) {
-      const slug = storeNameValue
-        .trim()
-        .toLowerCase()
-        .replace(/\s+/g, "-")
-        .replace(/[^a-z0-9-]/g, "");
+    if (!selectedSubscription) return;
+
+    setValue("storeName", selectedSubscription.storeName, {
+      shouldValidate: true,
+    });
+    setValue("subdomain", selectedSubscription.subdomain, {
+      shouldValidate: true,
+    });
+    setValue(
+      "owner",
+      typeof selectedSubscription.user === "object"
+        ? (selectedSubscription.user as any)._id
+        : selectedSubscription.user,
+      { shouldValidate: true },
+    );
+    setValue("phone", selectedSubscription.ownerPhone ?? "", {
+      shouldValidate: false,
+    });
+    setValue("email", selectedSubscription.ownerEmail ?? "", {
+      shouldValidate: false,
+    });
+    if (selectedSubscription.customDomain) {
+      setValue("customDomain", selectedSubscription.customDomain, {
+        shouldValidate: false,
+      });
+    }
+  }, [selectedSubscription, setValue]);
+
+  useEffect(() => {
+    if (selectedSubscription) return;
+    if (!storeNameValue) return;
+
+    const slug = storeNameValue
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+
+    if (slug) {
       setValue("subdomain", slug, { shouldValidate: false });
     }
-  }, [storeNameValue, setValue]);
+  }, [storeNameValue, setValue, selectedSubscription]);
 
   useEffect(() => {
-    if (open) reset();
+    if (open) {
+      reset({
+        currentSubscription: "",
+        storeName: "",
+        owner: "",
+        email: "",
+        phone: "",
+        subdomain: "",
+        customDomain: "",
+        address: "",
+        businessType: "ECOMMERCE",
+        description: "",
+      });
+      setLogoFile(null);
+      setBannerFile(null);
+    }
   }, [open, reset]);
 
   const onSubmit = async (values: CreateStoreValues) => {
     try {
-      const payload = new FormData();
-      payload.append("storeName", String(values.storeName));
-      payload.append("owner", String(values.owner));
-      if (values.subdomain) payload.append("subdomain", String(values.subdomain));
-      if (values.businessType) payload.append("businessType", String(values.businessType));
-      if (typeof values.status !== "undefined") payload.append("status", String(values.status));
-      if (typeof values.isVerified !== "undefined") payload.append("isVerified", String(values.isVerified));
-      if (values.email) payload.append("email", String(values.email));
-      if (values.phone) payload.append("phone", String(values.phone));
-      if (values.customDomain) payload.append("customDomain", String(values.customDomain));
-      if (values.address) payload.append("address", String(values.address));
-      if (values.description) payload.append("description", String(values.description));
-      if (values.planId) payload.append("planId", String(values.planId));
+      setIsSubmitting(true);
 
-      await createStore(payload).unwrap();
-      toast.success(`Store "${values.storeName}" created`);
+      console.log(" Form validation passed, creating store with values:", {
+        subscription: values.currentSubscription,
+        storeName: values.storeName,
+        owner: values.owner,
+        subdomain: values.subdomain,
+      });
+
+      const formData = new FormData();
+
+      formData.append("currentSubscription", values.currentSubscription);
+      formData.append("storeName", values.storeName);
+      formData.append("owner", values.owner);
+      formData.append("subdomain", values.subdomain);
+      formData.append("businessType", values.businessType);
+
+      // Optional fields
+      if (values.email?.trim()) formData.append("email", values.email);
+      if (values.phone?.trim()) formData.append("phone", values.phone);
+      if (values.customDomain?.trim())
+        formData.append("customDomain", values.customDomain);
+      if (values.address?.trim()) formData.append("address", values.address);
+      if (values.description?.trim())
+        formData.append("description", values.description);
+
+      // File uploads (handled by multer on backend)
+      if (logoFile) {
+        console.log(" Adding logo file:", logoFile.name, logoFile.size);
+        formData.append("logo", logoFile);
+      }
+      if (bannerFile) {
+        console.log(" Adding banner file:", bannerFile.name, bannerFile.size);
+        formData.append("banner", bannerFile);
+      }
+
+      console.log(" Submitting FormData to backend...");
+
+      // Call Redux mutation
+      const result = await createStore(formData).unwrap();
+
+      console.log(" Store created successfully:", result);
+
+      toast.success(`Store "${values.storeName}" created successfully!`);
+
+      reset();
+      setLogoFile(null);
+      setBannerFile(null);
       onClose();
+
+      onSuccess?.();
     } catch (err: unknown) {
-      toast.error(
+      console.error(" Store creation error:", err);
+
+      const errorMsg =
         (err as { data?: { message?: string } })?.data?.message ??
-          "Failed to create store",
-      );
+        (err as { message?: string })?.message ??
+        "Failed to create store";
+
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  const isLoading = isCreating || isSubmitting;
+  const canSubmit = currentSubscriptionValue && !isLoading;
+
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Store</DialogTitle>
           <DialogDescription>
-            Manually create a store and optionally assign a subscription plan.
+            Select an approved subscription — store details will be
+            pre-populated automatically from the subscription data.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Store Name + Owner */}
+          {/* Subscription Selection */}
+          <div className="space-y-1.5">
+            <Label htmlFor="cs-subscription">
+              Approved Subscription
+              <span className="text-destructive ml-1">*</span>
+            </Label>
+            <Controller
+              control={control}
+              name="currentSubscription"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={ownersLoading}
+                >
+                  <SelectTrigger
+                    id="cs-subscription"
+                    className={cn(
+                      "w-full",
+                      errors.currentSubscription && "border-destructive",
+                    )}
+                  >
+                    <SelectValue
+                      placeholder={
+                        ownersLoading
+                          ? "Loading subscriptions..."
+                          : "Select an approved subscription"
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {approvedSubscriptions.length > 0 ? (
+                      approvedSubscriptions.map((sub) => (
+                        <SelectItem key={sub._id} value={sub._id}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{sub.ownerName}</span>
+                            <span className="text-xs text-muted-foreground">
+                              ({sub.ownerEmail})
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="no-subscription" disabled>
+                        No approved subscriptions available
+                      </SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+            {errors.currentSubscription && (
+              <p className="text-xs text-destructive font-medium">
+                {errors.currentSubscription.message}
+              </p>
+            )}
+          </div>
+
+          {/* Auto-populated Info Banner */}
+          {selectedSubscription && (
+            <div className="flex items-start gap-2.5 rounded-lg border border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800 p-3">
+              <Info className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                <p className="font-semibold mb-0.5">
+                  Auto-populated from subscription
+                </p>
+                <p className="text-xs opacity-80">
+                  Owner: {selectedSubscription.ownerName} •{" "}
+                  {selectedSubscription.ownerEmail}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Store Name & Subdomain */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="cs-storeName">Store Name</Label>
+              <Label htmlFor="cs-storeName">
+                Store Name
+                <span className="text-destructive ml-1">*</span>
+              </Label>
               <Input
                 id="cs-storeName"
-                placeholder="My Store"
+                placeholder="My Awesome Store"
                 {...register("storeName")}
-                className={errors.storeName ? "border-destructive" : ""}
+                className={cn(
+                  "w-full",
+                  errors.storeName && "border-destructive",
+                )}
+                readOnly={!!selectedSubscription}
+                disabled={!!selectedSubscription}
               />
               {errors.storeName && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.storeName.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label>Store Owner</Label>
-              <Select
-                value={ownerValue}
-                onValueChange={(v: any) =>
-                  setValue("owner", v, { shouldValidate: true })
-                }
-              >
-                <SelectTrigger
-                  className={errors.owner ? "border-destructive" : ""}
-                >
-                  <SelectValue placeholder="Select owner..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {storeOwners.map((u) => (
-                    <SelectItem key={u._id} value={u._id}>
-                      {u.name ?? u.email}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.owner && (
-                <p className="text-sm text-destructive">
-                  {errors.owner.message}
+              <Label htmlFor="cs-subdomain">
+                Subdomain
+                <span className="text-destructive ml-1">*</span>
+              </Label>
+              <div className="flex items-center">
+                <Input
+                  id="cs-subdomain"
+                  placeholder="my-store"
+                  {...register("subdomain")}
+                  className={cn(
+                    "rounded-r-none w-full",
+                    errors.subdomain && "border-destructive",
+                  )}
+                  readOnly={!!selectedSubscription}
+                  disabled={!!selectedSubscription}
+                />
+                <span className="inline-flex h-9 items-center rounded-r-md border border-l-0 bg-muted px-2.5 text-xs text-muted-foreground whitespace-nowrap font-medium">
+                  .domain.shop
+                </span>
+              </div>
+              {errors.subdomain && (
+                <p className="text-xs text-destructive font-medium">
+                  {errors.subdomain.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Email + Phone */}
+          {/* Owner Info (read-only when subscription selected) */}
+          {selectedSubscription && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="cs-ownerName">Owner Name</Label>
+                <Input
+                  id="cs-ownerName"
+                  value={selectedSubscription.ownerName}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="cs-ownerEmail">Owner Email</Label>
+                <Input
+                  id="cs-ownerEmail"
+                  value={selectedSubscription.ownerEmail}
+                  readOnly
+                  disabled
+                  className="bg-muted cursor-not-allowed"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Contact Information */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="cs-email">Email</Label>
+              <Label htmlFor="cs-email">Contact Email</Label>
               <Input
                 id="cs-email"
                 type="email"
                 placeholder="store@example.com"
                 {...register("email")}
-                className={errors.email ? "border-destructive" : ""}
+                className={cn("w-full", errors.email && "border-destructive")}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.email.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="cs-phone">Phone</Label>
+              <Label htmlFor="cs-phone">Phone Number</Label>
               <Input
                 id="cs-phone"
                 placeholder="+1 (555) 000-0000"
                 {...register("phone")}
-                className={errors.phone ? "border-destructive" : ""}
+                className={cn("w-full", errors.phone && "border-destructive")}
               />
               {errors.phone && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.phone.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Subdomain + Custom Domain */}
+          {/* Domain & Address */}
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="cs-subdomain">
-                Subdomain{" "}
-                <span className="text-muted-foreground font-normal">
-                  (.domain.shop)
-                </span>
-              </Label>
-              <Input
-                id="cs-subdomain"
-                placeholder="my-store"
-                {...register("subdomain")}
-                className={errors.subdomain ? "border-destructive" : ""}
-              />
-              {errors.subdomain && (
-                <p className="text-sm text-destructive">
-                  {errors.subdomain.message}
-                </p>
-              )}
-            </div>
-
             <div className="space-y-1.5">
               <Label htmlFor="cs-customDomain">
                 Custom Domain{" "}
-                <span className="text-muted-foreground font-normal">
+                <span className="text-muted-foreground text-xs font-normal">
                   (optional)
                 </span>
               </Label>
@@ -476,169 +685,179 @@ function CreateStoreDialog({
                 id="cs-customDomain"
                 placeholder="www.example.com"
                 {...register("customDomain")}
-                className={errors.customDomain ? "border-destructive" : ""}
+                className={cn(
+                  "w-full",
+                  errors.customDomain && "border-destructive",
+                )}
               />
               {errors.customDomain && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.customDomain.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-address">Address</Label>
+              <Input
+                id="cs-address"
+                placeholder="123 Main Street, City, State"
+                {...register("address")}
+                className={cn("w-full", errors.address && "border-destructive")}
+              />
+              {errors.address && (
+                <p className="text-xs text-destructive font-medium">
+                  {errors.address.message}
                 </p>
               )}
             </div>
           </div>
 
-          {/* Address */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cs-address">Address</Label>
-            <Input
-              id="cs-address"
-              placeholder="123 Main St, City, Country"
-              {...register("address")}
-              className={errors.address ? "border-destructive" : ""}
-            />
-            {errors.address && (
-              <p className="text-sm text-destructive">
-                {errors.address.message}
-              </p>
-            )}
-          </div>
-
-          {/* Business Type + Pricing Plan */}
+          {/* Business Type & Description */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Business Type</Label>
-              <Select
-                value={businessTypeValue}
-                onValueChange={(v) =>
-                  setValue(
-                    "businessType",
-                    v as CreateStoreValues["businessType"],
-                    { shouldValidate: true },
-                  )
-                }
-              >
-                <SelectTrigger
-                  className={errors.businessType ? "border-destructive" : ""}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {businessTypes.map((bt) => (
-                    <SelectItem key={bt} value={bt}>
-                      {bt.charAt(0) + bt.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="cs-businessType">
+                Business Type
+                <span className="text-destructive ml-1">*</span>
+              </Label>
+              <Controller
+                control={control}
+                name="businessType"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger
+                      id="cs-businessType"
+                      className={cn(
+                        "w-full",
+                        errors.businessType && "border-destructive",
+                      )}
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {BUSINESS_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
               {errors.businessType && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.businessType.message}
                 </p>
               )}
             </div>
 
             <div className="space-y-1.5">
-              <Label>
-                Pricing Plan{" "}
-                <span className="text-muted-foreground font-normal">
+              <Label htmlFor="cs-description">Description</Label>
+              <Input
+                id="cs-description"
+                placeholder="Brief store description..."
+                {...register("description")}
+                className={cn(
+                  "w-full",
+                  errors.description && "border-destructive",
+                )}
+              />
+              {errors.description && (
+                <p className="text-xs text-destructive font-medium">
+                  {errors.description.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* File Uploads */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-logo">
+                Logo{" "}
+                <span className="text-muted-foreground text-xs font-normal">
                   (optional)
                 </span>
               </Label>
-              <Select
-                value={planIdValue ?? ""}
-                onValueChange={(v: any) =>
-                  setValue("planId", v === "none" ? "" : v, {
-                    shouldValidate: true,
-                  })
-                }
+              <div
+                className="border-2 border-dashed rounded-lg px-3 py-6 text-center cursor-pointer transition-colors hover:bg-muted/40 hover:border-primary"
+                onClick={() => logoInputRef.current?.click()}
               >
-                <SelectTrigger
-                  className={errors.planId ? "border-destructive" : ""}
-                >
-                  <SelectValue placeholder="No plan" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No plan</SelectItem>
-                  {plans
-                    .filter((p) => p.status === "ACTIVE")
-                    .map((p) => (
-                      <SelectItem key={p._id} value={p._id}>
-                        {p.displayName} — ${p.monthlyPrice}/mo
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              {errors.planId && (
-                <p className="text-sm text-destructive">
-                  {errors.planId.message}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Description */}
-          <div className="space-y-1.5">
-            <Label htmlFor="cs-description">Description</Label>
-            <Input
-              id="cs-description"
-              placeholder="Brief store description..."
-              {...register("description")}
-              className={errors.description ? "border-destructive" : ""}
-            />
-            {errors.description && (
-              <p className="text-sm text-destructive">
-                {errors.description.message}
-              </p>
-            )}
-          </div>
-
-          {/* Status + Is Verified */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Store Status</Label>
-              <Select
-                value={statusValue}
-                onValueChange={(v) =>
-                  setValue("status", v as CreateStoreValues["status"], {
-                    shouldValidate: true,
-                  })
-                }
-              >
-                <SelectTrigger
-                  className={errors.status ? "border-destructive" : ""}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PENDING">Pending</SelectItem>
-                  <SelectItem value="ACTIVE">Active</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.status && (
-                <p className="text-sm text-destructive">
-                  {errors.status.message}
-                </p>
-              )}
-            </div>
-
-            <div className="flex flex-col justify-end pb-1 space-y-1.5">
-              <Label>Is Verified</Label>
-              <div className="flex items-center gap-2 h-9">
-                <Switch
-                  checked={isVerifiedValue}
-                  onCheckedChange={(v) =>
-                    setValue("isVerified", v, { shouldValidate: true })
-                  }
-                />
-                <span className="text-sm text-muted-foreground">
-                  {isVerifiedValue ? "Verified" : "Not verified"}
-                </span>
+                {logoFile ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {logoFile.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      Click to upload
+                    </span>
+                  </div>
+                )}
               </div>
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setLogoFile(file);
+                  if (file) {
+                    console.log(" Logo selected:", file.name, file.size);
+                  }
+                }}
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="cs-banner">
+                Banner{" "}
+                <span className="text-muted-foreground text-xs font-normal">
+                  (optional)
+                </span>
+              </Label>
+              <div
+                className="border-2 border-dashed rounded-lg px-3 py-6 text-center cursor-pointer transition-colors hover:bg-muted/40 hover:border-primary"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                {bannerFile ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground truncate">
+                      {bannerFile.name}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1">
+                    <Upload className="w-4 h-4 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">
+                      Click to upload
+                    </span>
+                  </div>
+                )}
+              </div>
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0] ?? null;
+                  setBannerFile(file);
+                  if (file) {
+                    console.log(" Banner selected:", file.name, file.size);
+                  }
+                }}
+              />
             </div>
           </div>
 
-          <DialogFooter className="pt-2">
+          <DialogFooter className="pt-2 border-t">
             <Button
               type="button"
               variant="outline"
@@ -650,10 +869,17 @@ function CreateStoreDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
-              className="active:scale-95 transition-transform"
+              disabled={!canSubmit}
+              className="active:scale-95 hover:cursor-pointer transition-transform"
             >
-              {isLoading ? "Creating..." : "Create Store"}
+              {isLoading ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Creating…
+                </>
+              ) : (
+                "Create Store"
+              )}
             </Button>
           </DialogFooter>
         </form>
@@ -662,38 +888,38 @@ function CreateStoreDialog({
   );
 }
 
-const editStoreSchema = z.object({
-  storeName: z.string().min(1, "Store name is required"),
-  phone: z.string().optional(),
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  customDomain: z.string().optional(),
-  address: z.string().optional(),
-  description: z.string().optional(),
-});
-
-type EditStoreValues = z.infer<typeof editStoreSchema>;
-
 function EditStoreDialog({
   store,
   onClose,
+  onSuccess,
 }: {
   store: IStore | null;
   onClose: () => void;
+  onSuccess?: () => void;
 }) {
   const [updateStore, { isLoading }] = useUpdateStoreMutation();
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
+
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    control,
+    formState: { errors, isValid },
     reset,
   } = useForm<EditStoreValues>({
-    resolver: zodResolver(editStoreSchema),
+    resolver: zodResolver(editStoreSchema as any),
+    mode: "onBlur",
     defaultValues: {
       storeName: "",
-      phone: "",
       email: "",
+      phone: "",
       customDomain: "",
+      subDomain: "",
+      businessType: "ECOMMERCE",
       address: "",
       description: "",
     },
@@ -702,10 +928,11 @@ function EditStoreDialog({
   useEffect(() => {
     if (store) {
       reset({
-        storeName: store.storeName,
-        phone: store.phone ?? "",
+        storeName: store.storeName ?? "",
         email: store.email ?? "",
+        phone: store.phone ?? "",
         customDomain: store.customDomain ?? "",
+        subDomain: store.subdomain ?? "",
         address: store.address ?? "",
         description: store.description ?? "",
       });
@@ -714,25 +941,63 @@ function EditStoreDialog({
 
   const onSubmit = async (values: EditStoreValues) => {
     if (!store) return;
+
     try {
-      const fd = new FormData();
-      Object.entries(values).forEach(([k, v]) => {
-        if (v) fd.append(k, v);
-      });
-      await updateStore({ id: store._id, data: fd }).unwrap();
-      toast.success(`"${values.storeName}" updated`);
+      console.log(" Updating store:", store._id, values);
+
+      const formData = new FormData();
+
+      // Only append non-empty values
+      if (values.storeName?.trim())
+        formData.append("storeName", values.storeName);
+      if (values.businessType?.trim())
+        formData.append("businessType", values.businessType);
+      if (values.email?.trim()) formData.append("email", values.email);
+      if (values.phone?.trim()) formData.append("phone", values.phone);
+      if (values.subDomain?.trim())
+        formData.append("subdomain", values.subDomain);
+      if (values.customDomain?.trim())
+        formData.append("customDomain", values.customDomain);
+
+      if (values.address?.trim()) formData.append("address", values.address);
+      if (values.description?.trim())
+        formData.append("description", values.description);
+
+      if (logoFile) {
+        formData.append("logo", logoFile);
+      }
+
+      if (bannerFile) {
+        formData.append("banner", bannerFile);
+      }
+
+      const result = await updateStore({
+        id: store._id,
+        data: formData,
+      }).unwrap();
+
+      console.log(" Store updated successfully:", result);
+
+      toast.success(`"${values.storeName}" updated successfully!`);
+
+      reset();
       onClose();
+      onSuccess?.();
     } catch (err: unknown) {
-      toast.error(
+      console.error(" Store update error:", err);
+
+      const errorMsg =
         (err as { data?: { message?: string } })?.data?.message ??
-          "Update failed",
-      );
+        (err as { message?: string })?.message ??
+        "Update failed";
+
+      toast.error(errorMsg);
     }
   };
 
   return (
     <Dialog open={!!store} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="overflow-y-auto max-h-[80vh]">
         <DialogHeader>
           <DialogTitle>Edit Store</DialogTitle>
           <DialogDescription>
@@ -740,17 +1005,21 @@ function EditStoreDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
+          <div className="grid grid-cols-2 gap-4 mb-6">
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="edit-storeName">Store Name</Label>
               <Input
                 id="edit-storeName"
+                placeholder="Store name"
                 {...register("storeName")}
-                className={errors.storeName ? "border-destructive" : ""}
+                className={cn(
+                  "w-full",
+                  errors.storeName && "border-destructive",
+                )}
               />
               {errors.storeName && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.storeName.message}
                 </p>
               )}
@@ -761,11 +1030,12 @@ function EditStoreDialog({
               <Input
                 id="edit-email"
                 type="email"
+                placeholder="store@example.com"
                 {...register("email")}
-                className={errors.email ? "border-destructive" : ""}
+                className={cn("w-full", errors.email && "border-destructive")}
               />
               {errors.email && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.email.message}
                 </p>
               )}
@@ -775,11 +1045,12 @@ function EditStoreDialog({
               <Label htmlFor="edit-phone">Phone</Label>
               <Input
                 id="edit-phone"
+                placeholder="+1 (555) 000-0000"
                 {...register("phone")}
-                className={errors.phone ? "border-destructive" : ""}
+                className={cn("w-full", errors.phone && "border-destructive")}
               />
               {errors.phone && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.phone.message}
                 </p>
               )}
@@ -787,17 +1058,46 @@ function EditStoreDialog({
 
             <div className="col-span-2 space-y-1.5">
               <Label htmlFor="edit-customDomain">
-                Custom Domain (optional)
+                Custom Domain{" "}
+                <span className="text-xs text-muted-foreground">
+                  (optional)
+                </span>
               </Label>
               <Input
                 id="edit-customDomain"
                 placeholder="www.example.com"
                 {...register("customDomain")}
-                className={errors.customDomain ? "border-destructive" : ""}
+                className={cn(
+                  "w-full",
+                  errors.customDomain && "border-destructive",
+                )}
               />
               {errors.customDomain && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.customDomain.message}
+                </p>
+              )}
+            </div>
+
+            <div className="col-span-2 space-y-1.5">
+              <Label htmlFor="edit-subDomain">
+                Sub Domain{" "}
+                <span className="text-xs text-muted-foreground">
+                  (optional)
+                </span>
+              </Label>
+              <Input
+                id="edit-subDomain"
+                placeholder="www.example.com"
+                {...register("subDomain")}
+                className={cn(
+                  "w-full",
+                  errors.subDomain && "border-destructive",
+                )}
+              />
+              {errors.subDomain && (
+                <p className="text-xs text-destructive font-medium">
+                  {errors.subDomain.message}
                 </p>
               )}
             </div>
@@ -806,11 +1106,12 @@ function EditStoreDialog({
               <Label htmlFor="edit-address">Address</Label>
               <Input
                 id="edit-address"
+                placeholder="123 Main Street, City, State"
                 {...register("address")}
-                className={errors.address ? "border-destructive" : ""}
+                className={cn("w-full", errors.address && "border-destructive")}
               />
               {errors.address && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.address.message}
                 </p>
               )}
@@ -820,18 +1121,127 @@ function EditStoreDialog({
               <Label htmlFor="edit-description">Description</Label>
               <Input
                 id="edit-description"
+                placeholder="Brief store description..."
                 {...register("description")}
-                className={errors.description ? "border-destructive" : ""}
+                className={cn(
+                  "w-full",
+                  errors.description && "border-destructive",
+                )}
               />
               {errors.description && (
-                <p className="text-sm text-destructive">
+                <p className="text-xs text-destructive font-medium">
                   {errors.description.message}
                 </p>
               )}
             </div>
           </div>
 
-          <DialogFooter>
+          <div className="space-y-1.5">
+            <Label htmlFor="cs-businessType">
+              Business Type
+              <span className="text-destructive ml-1">*</span>
+            </Label>
+
+            <Controller
+              control={control}
+              name="businessType"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {BUSINESS_TYPES.map((type) => (
+                      <SelectItem key={type} value={type}>
+                        {type}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            {/* Logo */}
+            <div className="space-y-2">
+              <Label>Store Logo</Label>
+
+              {store?.logo && (
+                <Image
+                  width={500}
+                  height={500}
+                  priority
+                  quality={90}
+                  src={store.logo}
+                  alt="Store Logo"
+                  className="h-24 w-full object-cover rounded-md border"
+                />
+              )}
+
+              <div
+                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/40"
+                onClick={() => logoInputRef.current?.click()}
+              >
+                {logoFile ? (
+                  <p className="text-sm font-medium">{logoFile.name}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Click to upload new logo
+                  </p>
+                )}
+              </div>
+
+              <input
+                ref={logoInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setLogoFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+
+            {/* Banner */}
+            <div className="space-y-2">
+              <Label>Store Banner</Label>
+
+              {store?.banner && (
+                <Image
+                  width={500}
+                  height={500}
+                  priority
+                  quality={90}
+                  src={store.banner}
+                  alt="Store Banner"
+                  className="h-24 w-full object-cover rounded-md border"
+                />
+              )}
+
+              <div
+                className="border-2 border-dashed rounded-lg p-4 text-center cursor-pointer hover:bg-muted/40"
+                onClick={() => bannerInputRef.current?.click()}
+              >
+                {bannerFile ? (
+                  <p className="text-sm font-medium">{bannerFile.name}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    Click to upload new banner
+                  </p>
+                )}
+              </div>
+
+              <input
+                ref={bannerInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setBannerFile(e.target.files?.[0] ?? null)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="pt-2 border-t">
             <Button
               type="button"
               variant="outline"
@@ -843,10 +1253,17 @@ function EditStoreDialog({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isLoading || !isValid}
               className="active:scale-95 transition-transform"
             >
-              {isLoading ? "Saving…" : "Save Changes"}
+              {isLoading ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Saving…
+                </>
+              ) : (
+                "Save Changes"
+              )}
             </Button>
           </DialogFooter>
         </form>
@@ -870,7 +1287,7 @@ function StoreDetailSheet({
       ? (store.owner as unknown as PopulatedOwner)
       : null;
 
-  const sub: any = isSubscriptionPopulated(store.currentSubscription)
+  const sub = isSubscriptionPopulated(store.currentSubscription)
     ? store.currentSubscription
     : null;
 
@@ -878,7 +1295,7 @@ function StoreDetailSheet({
 
   return (
     <Sheet open={!!store} onOpenChange={(v) => !v && onClose()}>
-      <SheetContent className="w-full sm:max-w-120 overflow-y-auto">
+      <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto">
         <SheetHeader className="pb-4 border-b">
           <div className="flex items-center gap-3">
             <Avatar className="h-12 w-12">
@@ -898,7 +1315,6 @@ function StoreDetailSheet({
         </SheetHeader>
 
         <div className="py-5 space-y-6">
-          {/* Status + badges */}
           <div className="flex items-center gap-2 flex-wrap">
             <StatusBadge status={store.status} />
             {store.isVerified && (
@@ -914,7 +1330,6 @@ function StoreDetailSheet({
             </Badge>
           </div>
 
-          {/* Stats grid */}
           <div className="grid grid-cols-2 gap-3">
             {[
               { icon: Package, label: "Products", value: store.totalProducts },
@@ -940,7 +1355,6 @@ function StoreDetailSheet({
             ))}
           </div>
 
-          {/* Owner info */}
           {owner && (
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
@@ -963,7 +1377,6 @@ function StoreDetailSheet({
             </div>
           )}
 
-          {/* Contact */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Contact & Domain
@@ -997,7 +1410,7 @@ function StoreDetailSheet({
                   rel="noopener noreferrer"
                   className="flex items-center gap-1 text-primary hover:underline text-xs"
                 >
-                  {store.subdomain}.domain.shop{" "}
+                  {store.subdomain}.domain.shop
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -1010,7 +1423,6 @@ function StoreDetailSheet({
             </div>
           </div>
 
-          {/* Subscription */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Subscription
@@ -1068,7 +1480,6 @@ function StoreDetailSheet({
             </div>
           </div>
 
-          {/* Dates */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
               Timeline
@@ -1120,617 +1531,355 @@ function StoreCard({
   const planName = getSubscriptionPlanName(store);
 
   return (
-    <Card className="group relative border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-      <div className="h-16 bg-linear-to-br from-primary/10 to-primary/5 relative">
+    <Card className="group relative p-0 border shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div className="h-16 bg-gradient-to-br from-primary/10 to-primary/5 relative">
         {store.banner && (
           <Image
             width={600}
             height={400}
             src={store.banner}
-            priority
-            quality={90}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
+            alt={`${store.storeName} banner`}
+            className="w-full h-full object-cover"
           />
         )}
-        <div className="absolute bottom-0 right-0 left-0 flex justify-end p-2 gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-6 w-6 active:scale-95 transition-transform"
-            onClick={onView}
-          >
-            <Eye className="w-3 h-3" />
-          </Button>
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-6 w-6 active:scale-95 transition-transform"
-            onClick={onEdit}
-          >
-            <Pencil className="w-3 h-3" />
-          </Button>
-          {store.status === "SUSPENDED" || store.status === "PENDING" ? (
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-6 w-6 active:scale-95 transition-transform"
-              onClick={onActivate}
-            >
-              <Play className="w-3 h-3 text-emerald-600" />
-            </Button>
-          ) : (
-            <Button
-              size="icon"
-              variant="secondary"
-              className="h-6 w-6 active:scale-95 transition-transform"
-              onClick={onSuspend}
-            >
-              <Pause className="w-3 h-3 text-amber-600" />
-            </Button>
-          )}
-          <Button
-            size="icon"
-            variant="secondary"
-            className="h-6 w-6 active:scale-95 transition-transform hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="w-3 h-3" />
-          </Button>
-        </div>
       </div>
 
-      <CardContent className="pt-3 pb-4">
-        <div className="flex items-center gap-2.5 mb-3 -mt-1">
-          <Avatar className="h-9 w-9 ring-2 ring-background">
-            <AvatarImage src={store.logo} />
-            <AvatarFallback className="text-sm font-bold bg-primary/10 text-primary">
-              {store.storeName.charAt(0)}
+      <CardContent className="pt-4 pb-4">
+        <div className="flex gap-3 mb-3">
+          <Avatar className="h-10 w-10 flex-shrink-0">
+            <AvatarImage src={store.logo} alt={store.storeName} />
+            <AvatarFallback className="font-bold bg-primary/10 text-primary">
+              {store.storeName.charAt(0).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className="min-w-0">
-            <p className="font-semibold text-sm truncate">{store.storeName}</p>
-            <p className="text-xs text-muted-foreground truncate">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-sm truncate">
+              {store.storeName}
+            </h3>
+            <p className="text-xs text-muted-foreground">
               {store.subdomain}.domain.shop
             </p>
           </div>
-        </div>
-
-        <div className="flex items-center justify-between mb-2">
           <StatusBadge status={store.status} />
-          <span className="text-xs text-muted-foreground">
-            {store.businessType}
-          </span>
         </div>
 
         {planName && (
-          <div className="mb-2">
-            <Badge
-              variant="outline"
-              className="text-[10px] gap-1 bg-blue-50 text-blue-700 border-blue-200"
-            >
-              <CreditCard className="w-2.5 h-2.5" />
+          <div className="mb-2 text-xs">
+            <Badge variant="secondary" className="text-xs">
               {planName}
             </Badge>
           </div>
         )}
 
-        <div className="grid grid-cols-3 gap-2 text-center">
-          {[
-            { label: "Products", value: store.totalProducts },
-            { label: "Orders", value: store.totalOrders },
-            { label: "Revenue", value: formatCurrency(store.totalRevenue) },
-          ].map(({ label, value }) => (
-            <div key={label} className="bg-muted/40 rounded px-2 py-1.5">
-              <p className="text-[10px] text-muted-foreground">{label}</p>
-              <p className="text-xs font-semibold truncate">{value}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <Package className="w-3 h-3" />
+            <span>{store.totalProducts} products</span>
+          </div>
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <ShoppingCart className="w-3 h-3" />
+            <span>{store.totalOrders} orders</span>
+          </div>
+        </div>
+
+        <div className="flex gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 h-8 text-xs"
+            onClick={onView}
+          >
+            <Eye className="w-3 h-3 mr-1" />
+            View
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-1 h-8 text-xs"
+            onClick={onEdit}
+          >
+            <Pencil className="w-3 h-3 mr-1" />
+            Edit
+          </Button>
+          {store.status === "ACTIVE" ? (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 h-8 text-xs"
+              onClick={onSuspend}
+            >
+              <Pause className="w-3 h-3 mr-1" />
+              Suspend
+            </Button>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              className="flex-1 h-8 text-xs"
+              onClick={onActivate}
+            >
+              <Play className="w-3 h-3 mr-1" />
+              Activate
+            </Button>
+          )}
+          <Button
+            size="sm"
+            variant="destructive"
+            className="h-8 w-8 p-0"
+            onClick={onDelete}
+          >
+            <Trash2 className="w-3 h-3" />
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function StoreTableRow({
-  store,
-  onView,
-  onEdit,
-  onDelete,
-  onActivate,
-  onSuspend,
-}: {
-  store: IStoreWithSub;
-  onView: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-  onActivate: () => void;
-  onSuspend: () => void;
-}) {
-  type PopulatedOwner = { name?: string; email?: string };
-  const owner =
-    typeof store.owner === "object"
-      ? (store.owner as unknown as PopulatedOwner)
-      : null;
-
-  const planName = getSubscriptionPlanName(store);
-  const expiry = getSubscriptionExpiry(store);
-  const isExpired = expiry ? new Date(expiry) < new Date() : false;
-
-  return (
-    <tr className="border-b border-border/60 hover:bg-muted/30 transition-colors group">
-      <td className="px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={store.logo} />
-            <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">
-              {store.storeName.charAt(0)}
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-semibold text-sm">{store.storeName}</p>
-            <p className="text-xs text-muted-foreground">
-              {store.subdomain}.domain.shop
-            </p>
-          </div>
-        </div>
-      </td>
-      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-        {owner?.name ??
-          (typeof store.owner === "string" ? store.owner.slice(-6) : "—")}
-      </td>
-      <td className="px-5 py-3.5">
-        <StatusBadge status={store.status} />
-      </td>
-      <td className="px-5 py-3.5">
-        {planName ? (
-          <Badge
-            variant="outline"
-            className="text-xs gap-1 bg-blue-50 text-blue-700 border-blue-200"
-          >
-            <CreditCard className="w-3 h-3" />
-            {planName}
-          </Badge>
-        ) : store.currentSubscription ? (
-          <Badge
-            variant="outline"
-            className="text-xs gap-1 bg-blue-50 text-blue-700 border-blue-200"
-          >
-            <CreditCard className="w-3 h-3" /> Subscribed
-          </Badge>
-        ) : (
-          <Badge variant="outline" className="text-xs text-muted-foreground">
-            No Plan
-          </Badge>
-        )}
-      </td>
-      <td className="px-5 py-3.5 text-xs text-muted-foreground">
-        {expiry ? (
-          <span className={cn(isExpired ? "text-destructive font-medium" : "")}>
-            {isExpired ? "Expired " : ""}
-            {formatDate(expiry)}
-          </span>
-        ) : (
-          <span>—</span>
-        )}
-      </td>
-      <td className="px-5 py-3.5 text-sm text-right font-medium">
-        {formatCurrency(store.totalRevenue)}
-      </td>
-      <td className="px-5 py-3.5 text-sm text-muted-foreground">
-        {formatDate(store.createdAt)}
-      </td>
-      <td className="px-5 py-3.5">
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 active:scale-95 transition-transform"
-            onClick={onView}
-          >
-            <Eye className="w-3.5 h-3.5" />
-          </Button>
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 active:scale-95 transition-transform"
-            onClick={onEdit}
-          >
-            <Pencil className="w-3.5 h-3.5" />
-          </Button>
-          {store.status === "SUSPENDED" || store.status === "PENDING" ? (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 active:scale-95 transition-transform"
-              title="Activate"
-              onClick={onActivate}
-            >
-              <Play className="w-3.5 h-3.5 text-emerald-600" />
-            </Button>
-          ) : (
-            <Button
-              size="icon"
-              variant="ghost"
-              className="h-7 w-7 active:scale-95 transition-transform"
-              title="Suspend"
-              onClick={onSuspend}
-            >
-              <Pause className="w-3.5 h-3.5 text-amber-600" />
-            </Button>
-          )}
-          <Button
-            size="icon"
-            variant="ghost"
-            className="h-7 w-7 active:scale-95 transition-transform hover:text-destructive"
-            onClick={onDelete}
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
-        </div>
-      </td>
-    </tr>
-  );
-}
-
 export default function Stores() {
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [createOpen, setCreateOpen] = useState(false);
-  const [viewStore, setViewStore] = useState<IStoreWithSub | null>(null);
-  const [editStore, setEditStore] = useState<IStore | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [editingStore, setEditingStore] = useState<IStore | null>(null);
+  const [detailStore, setDetailStore] = useState<IStoreWithSub | null>(null);
   const [deleteStore, setDeleteStore] = useState<IStore | null>(null);
 
-  const { data, isLoading, isError } = useGetAllStoresQuery({ limit: 100 });
+  const {
+    data: storesData,
+    isLoading,
+    refetch,
+  } = useGetAllStoresQuery({ limit: 500 });
   const { data: analyticsData, isLoading: analyticsLoading } =
     useGetStoreAnalyticsQuery();
-  const [activateStore] = useActivateStoreMutation();
-  const [suspendStore] = useSuspendStoreMutation();
-  const [deleteStoreMutation, { isLoading: deleting }] =
-    useDeleteStoreMutation();
 
-  const stores = useMemo(() => (data?.data ?? []) as IStoreWithSub[], [data]);
-  const analytics = analyticsData?.data;
+  const [activateStoreMutation] = useActivateStoreMutation();
+  const [suspendStoreMutation] = useSuspendStoreMutation();
+  const [deleteStoreMutation] = useDeleteStoreMutation();
 
-  const filtered = useMemo(() => {
-    return stores.filter((s) => {
-      const matchStatus = statusFilter === "all" || s.status === statusFilter;
-      const matchSearch =
-        !search ||
-        s.storeName.toLowerCase().includes(search.toLowerCase()) ||
-        s.subdomain.toLowerCase().includes(search.toLowerCase()) ||
-        (s.email ?? "").toLowerCase().includes(search.toLowerCase());
-      return matchStatus && matchSearch;
-    });
-  }, [stores, search, statusFilter]);
+  const stores: IStoreWithSub[] = useMemo(
+    () => storesData?.data ?? [],
+    [storesData],
+  );
 
-  // Creation & subscription stats
-  const creationStats = useMemo(() => {
-    const now = new Date();
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setDate(now.getDate() - 30);
-    const sevenDaysAgo = new Date(now);
-    sevenDaysAgo.setDate(now.getDate() - 7);
+  const filteredStores = useMemo(
+    () =>
+      stores.filter(
+        (store) =>
+          store.storeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          store.subdomain.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          store.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ),
+    [stores, searchTerm],
+  );
 
-    return {
-      lastThirtyDays: stores.filter(
-        (s) => new Date(s.createdAt) >= thirtyDaysAgo,
-      ).length,
-      lastSevenDays: stores.filter((s) => new Date(s.createdAt) >= sevenDaysAgo)
-        .length,
-      withSubscription: stores.filter((s) => !!s.currentSubscription).length,
-      verified: stores.filter((s) => s.isVerified).length,
-    };
-  }, [stores]);
-
-  const handleActivate = async (store: IStore) => {
+  const handleActivate = async (storeId: string) => {
     try {
-      await activateStore(store._id).unwrap();
-      toast.success(`"${store.storeName}" activated`);
-    } catch {
+      await activateStoreMutation(storeId).unwrap();
+      toast.success("Store activated");
+      refetch();
+    } catch (err) {
       toast.error("Failed to activate store");
     }
   };
 
-  const handleSuspend = async (store: IStore) => {
+  const handleSuspend = async (storeId: string) => {
     try {
-      await suspendStore(store._id).unwrap();
-      toast.success(`"${store.storeName}" suspended`);
-    } catch {
+      await suspendStoreMutation(storeId).unwrap();
+      toast.success("Store suspended");
+      refetch();
+    } catch (err) {
       toast.error("Failed to suspend store");
     }
   };
 
-  const handleDeleteConfirm = async () => {
+  const handleDelete = async () => {
     if (!deleteStore) return;
     try {
       await deleteStoreMutation(deleteStore._id).unwrap();
-      toast.success(`"${deleteStore.storeName}" deleted`);
+      toast.success("Store deleted");
       setDeleteStore(null);
-    } catch {
+      refetch();
+    } catch (err) {
       toast.error("Failed to delete store");
     }
   };
 
+  const totalStores = stores.length;
+  const activeStores = stores.filter((s) => s.status === "ACTIVE").length;
+  const totalRevenue = stores.reduce(
+    (sum, s) => sum + (s.totalRevenue || 0),
+    0,
+  );
+
   return (
-    <div className="space-y-6 p-6">
-      {/* Header */}
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Stores</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Manage all tenant stores and subscriptions
+          <h1 className="text-3xl font-bold tracking-tight">
+            Store Management
+          </h1>
+          <p className="text-muted-foreground">
+            Manage all stores and their subscriptions
           </p>
         </div>
         <Button
-          onClick={() => setCreateOpen(true)}
-          className="active:scale-95 transition-transform gap-1.5"
+          onClick={() => setCreateDialogOpen(true)}
+          className="active:scale-95 transition-transform"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4 mr-2" />
           Create Store
         </Button>
       </div>
 
-      {/* Primary Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <StatCard
           label="Total Stores"
-          value={analytics?.totalStores ?? stores.length}
+          value={totalStores}
           icon={Store}
-          accent="bg-indigo-500"
-          isLoading={analyticsLoading}
+          accent="bg-blue-500"
+          isLoading={isLoading}
         />
         <StatCard
           label="Active"
-          value={analytics?.activeStores ?? 0}
+          value={activeStores}
           icon={CheckCircle2}
           accent="bg-emerald-500"
-          isLoading={analyticsLoading}
-        />
-        <StatCard
-          label="Pending"
-          value={analytics?.pendingStores ?? 0}
-          icon={Clock}
-          accent="bg-amber-500"
-          isLoading={analyticsLoading}
+          isLoading={isLoading}
         />
         <StatCard
           label="Total Revenue"
-          value={analytics ? formatCurrency(analytics.totalRevenue) : "—"}
-          icon={TrendingUp}
-          accent="bg-violet-500"
-          isLoading={analyticsLoading}
+          value={formatCurrency(totalRevenue)}
+          icon={DollarSign}
+          accent="bg-orange-500"
+          isLoading={isLoading}
+        />
+        <StatCard
+          label="Products"
+          value={stores.reduce((sum, s) => sum + (s.totalProducts || 0), 0)}
+          icon={Package}
+          accent="bg-purple-500"
+          isLoading={isLoading}
         />
       </div>
 
-      {/* Creation & Subscription Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard
-          label="Last 7 Days"
-          value={creationStats.lastSevenDays}
-          icon={CalendarDays}
-          accent="bg-sky-500"
-        />
-        <StatCard
-          label="Last 30 Days"
-          value={creationStats.lastThirtyDays}
-          icon={Layers}
-          accent="bg-teal-500"
-        />
-        <StatCard
-          label="Subscribed"
-          value={creationStats.withSubscription}
-          icon={CreditCard}
-          accent="bg-blue-500"
-        />
-        <StatCard
-          label="Verified"
-          value={creationStats.verified}
-          icon={BadgeCheck}
-          accent="bg-rose-500"
-        />
-      </div>
-
-      {/* Filters + view toggle */}
-      <Card className="border shadow-sm">
-        <CardContent className="pt-4 pb-4">
-          <div className="flex gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-50">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search stores..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-9"
-              />
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>Stores</CardTitle>
+              <CardDescription>
+                {filteredStores.length} of {totalStores} stores
+              </CardDescription>
             </div>
-            <Select
-              value={statusFilter}
-              onValueChange={(value) => setStatusFilter(value ?? "all")}
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                <SelectItem value="INACTIVE">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex border rounded-md overflow-hidden">
-              <Button
-                variant={viewMode === "list" ? "secondary" : "ghost"}
-                size="icon"
-                className="rounded-none h-9 w-9 active:scale-95 transition-transform"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="w-4 h-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "secondary" : "ghost"}
-                size="icon"
-                className="rounded-none h-9 w-9 active:scale-95 transition-transform"
-                onClick={() => setViewMode("grid")}
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Button>
+            <div className="flex gap-2">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search stores..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                <Button
+                  size="sm"
+                  variant={viewMode === "grid" ? "default" : "ghost"}
+                  onClick={() => setViewMode("grid")}
+                  className="h-8 w-8 p-0"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant={viewMode === "list" ? "default" : "ghost"}
+                  onClick={() => setViewMode("list")}
+                  className="h-8 w-8 p-0"
+                >
+                  <List className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </CardHeader>
 
-      {/* Content */}
-      {isError ? (
-        <Card className="border shadow-sm">
-          <CardContent className="py-16 text-center text-muted-foreground">
-            <p className="text-sm">
-              Failed to load stores. Please refresh and try again.
-            </p>
-          </CardContent>
-        </Card>
-      ) : viewMode === "grid" ? (
-        <div>
-          <p className="text-sm text-muted-foreground mb-3">
-            Showing {filtered.length} of {stores.length} stores
-          </p>
+        <CardContent>
           {isLoading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <Skeleton key={i} className="h-48 rounded-xl" />
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+              {[...Array(6)].map((_, i) => (
+                <Skeleton key={i} className="h-64 rounded-lg" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
-            <Card className="border-dashed">
-              <CardContent className="py-16 text-center text-muted-foreground">
-                <Store className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No stores found</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filtered.map((store) => (
+          ) : filteredStores.length > 0 ? (
+            <div
+              className={
+                viewMode === "grid"
+                  ? "grid gap-4 grid-cols-1 lg:grid-cols-2"
+                  : "space-y-3"
+              }
+            >
+              {filteredStores.map((store) => (
                 <StoreCard
                   key={store._id}
                   store={store}
-                  onView={() => setViewStore(store)}
-                  onEdit={() => setEditStore(store)}
+                  onView={() => setDetailStore(store)}
+                  onEdit={() => setEditingStore(store)}
                   onDelete={() => setDeleteStore(store)}
-                  onActivate={() => handleActivate(store)}
-                  onSuspend={() => handleSuspend(store)}
+                  onActivate={() => handleActivate(store._id)}
+                  onSuspend={() => handleSuspend(store._id)}
                 />
               ))}
             </div>
+          ) : (
+            <div className="text-center py-12">
+              <Store className="w-12 h-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+              <p className="text-muted-foreground">No stores found</p>
+            </div>
           )}
-        </div>
-      ) : (
-        <Card className="border shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">
-              All Stores{" "}
-              <span className="text-muted-foreground font-normal text-sm">
-                ({filtered.length})
-              </span>
-            </CardTitle>
-            <CardDescription>Hover a row to see actions</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="px-5 py-4 space-y-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full rounded" />
-                ))}
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="py-16 text-center text-muted-foreground">
-                <Store className="w-8 h-8 mx-auto mb-2 opacity-30" />
-                <p className="text-sm">No stores found</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border/60 bg-muted/40">
-                      {[
-                        { label: "Store", align: "left" },
-                        { label: "Owner", align: "left" },
-                        { label: "Status", align: "left" },
-                        { label: "Plan", align: "left" },
-                        { label: "Expiry", align: "left" },
-                        { label: "Revenue", align: "right" },
-                        { label: "Created", align: "left" },
-                        { label: "Actions", align: "left" },
-                      ].map(({ label, align }) => (
-                        <th
-                          key={label}
-                          className={cn(
-                            "px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground",
-                            align === "right" ? "text-right" : "text-left",
-                          )}
-                        >
-                          {label}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filtered.map((store) => (
-                      <StoreTableRow
-                        key={store._id}
-                        store={store}
-                        onView={() => setViewStore(store)}
-                        onEdit={() => setEditStore(store)}
-                        onDelete={() => setDeleteStore(store)}
-                        onActivate={() => handleActivate(store)}
-                        onSuspend={() => handleSuspend(store)}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Create Store dialog */}
       <CreateStoreDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
+        open={createDialogOpen}
+        onClose={() => setCreateDialogOpen(false)}
+        onSuccess={() => {
+          refetch();
+        }}
       />
 
-      {/* Detail sheet */}
-      <StoreDetailSheet store={viewStore} onClose={() => setViewStore(null)} />
+      <EditStoreDialog
+        store={editingStore}
+        onClose={() => setEditingStore(null)}
+        onSuccess={() => {
+          refetch();
+          setEditingStore(null);
+        }}
+      />
 
-      {/* Edit dialog */}
-      <EditStoreDialog store={editStore} onClose={() => setEditStore(null)} />
+      <StoreDetailSheet
+        store={detailStore}
+        onClose={() => setDetailStore(null)}
+      />
 
-      {/* Delete confirm */}
       <AlertDialog
         open={!!deleteStore}
-        onOpenChange={(v: boolean) => !v && setDeleteStore(null)}
+        onOpenChange={(open) => !open && setDeleteStore(null)}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Store</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{deleteStore?.storeName}</strong>? This action is
-              irreversible.
+              Are you sure you want to delete &quot;{deleteStore?.storeName}
+              &quot;? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="active:scale-95 transition-transform">
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteConfirm}
-              disabled={deleting}
-              className="bg-destructive hover:bg-destructive/90 active:scale-95 transition-transform"
+              onClick={handleDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Deleting…" : "Delete"}
+              Delete
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

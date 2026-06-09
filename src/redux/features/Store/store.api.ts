@@ -10,7 +10,7 @@ export interface IStore {
 
   subscription?: string;
 
-  currentSubscription?: string;
+  currentSubscription?: string | null | IPopulatedSubscription;
 
   storeName: string;
 
@@ -34,11 +34,7 @@ export interface IStore {
 
   description?: string;
 
-  status:
-    | "PENDING"
-    | "ACTIVE"
-    | "SUSPENDED"
-    | "INACTIVE";
+  status: "PENDING" | "ACTIVE" | "SUSPENDED" | "INACTIVE";
 
   totalProducts: number;
 
@@ -59,6 +55,19 @@ export interface IStore {
   updatedAt: string;
 }
 
+export interface IPopulatedSubscription {
+  _id: string;
+  plan?: {
+    _id: string;
+    displayName: string;
+    monthlyPrice: number;
+  };
+  status?: string;
+  currentPeriodEnd?: string;
+  endDate?: string;
+  startDate?: string;
+}
+
 interface GetAllStoresResponse {
   success: boolean;
   data: IStore[];
@@ -72,133 +81,63 @@ interface GetAllStoresResponse {
 
 export const storeApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    createStore: builder.mutation<
-      IResponse<IStore>,
-      FormData
-    >({
-      query: (formData) => ({
+    createStore: builder.mutation<IResponse<IStore>, FormData>({
+      query: (data) => ({
         url: "/stores/create-store",
         method: "POST",
-        data: formData,
+        data,
       }),
-      invalidatesTags: [
-        "STORES",
-        "SUBSCRIPTIONS",
-      ],
+      invalidatesTags: ["STORES", "SUBSCRIPTIONS"],
     }),
 
     updateStore: builder.mutation<
       IResponse<IStore>,
-      {
-        id: string;
-        data: FormData;
-      }
+      { id: string; data: FormData }
     >({
       query: ({ id, data }) => ({
         url: `/stores/${id}`,
         method: "PATCH",
         data,
       }),
-      invalidatesTags: (
-        result,
-        error,
-        { id },
-      ) => [
+      invalidatesTags: (result, error, { id }) => [
         "STORES",
-        {
-          type: "STORE",
-          id,
-        },
+        { type: "STORE", id },
       ],
     }),
 
-    activateStore: builder.mutation<
-      IResponse<IStore>,
-      string
-    >({
+    activateStore: builder.mutation<IResponse<IStore>, string>({
       query: (id) => ({
-        url: `/stores/activate/${id}`,
+        url: `/stores/${id}/activate`,
         method: "PATCH",
       }),
-      invalidatesTags: (
-        result,
-        error,
-        id,
-      ) => [
-        "STORES",
-        {
-          type: "STORE",
-          id,
-        },
-      ],
+      invalidatesTags: (result, error, id) => ["STORES", { type: "STORE", id }],
     }),
 
-    suspendStore: builder.mutation<
-      IResponse<IStore>,
-      string
-    >({
+    suspendStore: builder.mutation<IResponse<IStore>, string>({
       query: (id) => ({
-        url: `/stores/suspend/${id}`,
+        url: `/stores/${id}/suspend`,
         method: "PATCH",
       }),
-      invalidatesTags: (
-        result,
-        error,
-        id,
-      ) => [
-        "STORES",
-        {
-          type: "STORE",
-          id,
-        },
-      ],
+      invalidatesTags: (result, error, id) => ["STORES", { type: "STORE", id }],
     }),
 
-    deleteStore: builder.mutation<
-      IResponse<null>,
-      string
-    >({
+    deleteStore: builder.mutation<IResponse<null>, string>({
       query: (id) => ({
         url: `/stores/${id}`,
         method: "DELETE",
       }),
-      invalidatesTags: (
-        result,
-        error,
-        id,
-      ) => [
-        "STORES",
-        {
-          type: "STORE",
-          id,
-        },
-      ],
+      invalidatesTags: (result, error, id) => ["STORES", { type: "STORE", id }],
     }),
 
-    getSingleStore: builder.query<
-      IResponse<IStore>,
-      string
-    >({
+    getSingleStore: builder.query<IResponse<IStore>, string>({
       query: (id) => ({
         url: `/stores/${id}`,
         method: "GET",
       }),
-      providesTags: (
-        result,
-        error,
-        id,
-      ) => [
-        {
-          type: "STORE",
-          id,
-        },
-      ],
+      providesTags: (result, error, id) => [{ type: "STORE", id }],
     }),
 
-    getAllStores: builder.query<
-      GetAllStoresResponse,
-      Record<string, any>
-    >({
+    getAllStores: builder.query<GetAllStoresResponse, Record<string, any>>({
       query: (params) => ({
         url: "/stores",
         method: "GET",
@@ -207,10 +146,7 @@ export const storeApi = baseApi.injectEndpoints({
       providesTags: ["STORES"],
     }),
 
-    getMyStore: builder.query<
-      IResponse<IStore>,
-      void
-    >({
+    getMyStore: builder.query<IResponse<IStore>, void>({
       query: () => ({
         url: "/stores/my-store",
         method: "GET",
@@ -218,10 +154,7 @@ export const storeApi = baseApi.injectEndpoints({
       providesTags: ["STORES"],
     }),
 
-    getStoreAnalytics: builder.query<
-      IResponse<any>,
-      void
-    >({
+    getStoreAnalytics: builder.query<IResponse<any>, void>({
       query: () => ({
         url: "/stores/analytics",
         method: "GET",
@@ -236,15 +169,11 @@ export const storeApi = baseApi.injectEndpoints({
 export const {
   useCreateStoreMutation,
   useUpdateStoreMutation,
-
   useActivateStoreMutation,
   useSuspendStoreMutation,
-
   useDeleteStoreMutation,
-
   useGetSingleStoreQuery,
   useGetAllStoresQuery,
   useGetMyStoreQuery,
-
   useGetStoreAnalyticsQuery,
 } = storeApi;

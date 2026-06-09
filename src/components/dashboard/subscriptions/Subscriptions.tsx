@@ -67,10 +67,12 @@ import {
   Mail,
   Package,
   TrendingUp,
+  Plus,
 } from "lucide-react";
 
 import { toast } from "sonner";
 import Image from "next/image";
+import { CreateSubscriptionDialog } from "./CreateSubscription";
 
 type SubscriptionStatus =
   | "PENDING"
@@ -757,6 +759,7 @@ export default function Subscriptions() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [createOpen, setCreateOpen] = useState(false);
 
   const [detailId, setDetailId] = useState<string | null>(null);
   const [approveSub, setApproveSub] = useState<ISubscription | null>(null);
@@ -793,7 +796,7 @@ export default function Subscriptions() {
   return (
     <div className="space-y-6 p-1">
       {/* Page header */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center flex-wrap justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-foreground tracking-tight">
             Subscriptions
@@ -801,7 +804,16 @@ export default function Subscriptions() {
           <p className="text-muted-foreground text-sm mt-0.5">
             Review, approve, and manage all subscription requests
           </p>
+
         </div>
+         <div className="flex justify-between items-center gap-4">
+           <Button
+            onClick={() => setCreateOpen(true)}
+            className="active:scale-95 hover:cursor-pointer transition-transform gap-1.5"
+          >
+            <Plus className="w-4 h-4" />
+            Create Subscription
+          </Button>
         <Button
           variant="outline"
           size="sm"
@@ -814,6 +826,7 @@ export default function Subscriptions() {
           />
           Refresh
         </Button>
+         </div>
       </div>
 
       {/* Analytics */}
@@ -840,7 +853,6 @@ export default function Subscriptions() {
             {STATUS_OPTIONS.map((o) => (
               <div key={o.label}>
                 <Select
-               
                   value={statusFilter}
                   onValueChange={() => handleStatusChange(o.value)}
                 >
@@ -1018,6 +1030,11 @@ export default function Subscriptions() {
         onClose={() => setDetailId(null)}
         onApprove={(sub) => setApproveSub(sub)}
         onReject={(sub) => setRejectSub(sub)}
+      />
+
+      <CreateSubscriptionDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
       />
 
       <ApproveDialog
