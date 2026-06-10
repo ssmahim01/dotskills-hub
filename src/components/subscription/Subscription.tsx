@@ -90,7 +90,7 @@ const PAYMENT_METHODS = [
 export default function SubscriptionApply() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const planId = searchParams.get("planId");
+  const id = searchParams.get("planId");
 
   const [paymentProof, setPaymentProof] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -102,7 +102,7 @@ export default function SubscriptionApply() {
     data: planData,
     isLoading: planLoading,
     isError: planError,
-  } = useGetSinglePlanQuery(planId ?? "", { skip: !planId });
+  } = useGetSinglePlanQuery(id ?? "", { skip: !id });
 
   const [createSubscription, { isLoading: submitting }] =
     useCreateSubscriptionMutation();
@@ -122,10 +122,10 @@ export default function SubscriptionApply() {
 
   // Redirect if no planId
   useEffect(() => {
-    if (!planId) {
+    if (!id) {
       router.replace("/pricing");
     }
-  }, [planId, router]);
+  }, [id, router]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -205,7 +205,7 @@ export default function SubscriptionApply() {
     );
   }
 
-  if (!planId) return null;
+  if (!id) return null;
 
   const plan = planData?.data;
   const durationInMonths = watch("durationInMonths") ?? 1;
