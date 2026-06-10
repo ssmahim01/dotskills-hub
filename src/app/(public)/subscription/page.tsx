@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SubscriptionApply from "@/components/subscription/Subscription";
+import { Suspense } from "react";
 
 export const metadata: Metadata = {
   title: "Apply for Subscription | DotSkillsHub",
@@ -29,5 +30,11 @@ export const metadata: Metadata = {
 };
 
 export default function SubscriptionApplyPage() {
-  return <SubscriptionApply />;
+  return (
+    <>
+      <Suspense fallback={<div>Loading...</div>}>
+        <SubscriptionApply />
+      </Suspense>
+    </>
+  );
 }

@@ -19,37 +19,6 @@ import { IPlan } from "@/redux/features/Plan/plan.api";
 export default function Home({ plans }: { plans: IPlan[] }) {
   return (
     <div className="bg-background">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-40 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground font-bold">
-              D
-            </div>
-            <span className="font-bold text-lg text-foreground">
-              DotSkillsHub
-            </span>
-          </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href={ROUTES.PRICING}
-              className="text-foreground hover:text-primary transition-colors"
-            >
-              Pricing
-            </Link>
-            <Link
-              href={ROUTES.LOGIN}
-              className="text-foreground hover:text-primary transition-colors"
-            >
-              Sign In
-            </Link>
-            <Link href={ROUTES.REGISTER}>
-              <Button>Get Started</Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
       {/* Hero Section */}
       <section className="py-20 md:py-32 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-6">
@@ -169,78 +138,6 @@ export default function Home({ plans }: { plans: IPlan[] }) {
           </Link>
         </div>
       </section> */}
-
-      {/* Footer */}
-      <footer className="bg-card border-t border-border">
-        <div className="max-w-6xl mx-auto px-4 py-12">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div>
-              <h4 className="font-bold text-foreground mb-4">DotSkillsHub</h4>
-              <p className="text-muted-foreground text-sm">
-                The all-in-one platform for multi-tenant e-commerce
-              </p>
-            </div>
-            <div>
-              <h4 className="font-bold text-foreground mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Features
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Pricing
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Security
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-foreground mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    About
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Contact
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold text-foreground mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-foreground">
-                    Terms
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-border pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; 2024 DotSkillsHub. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -83,12 +83,16 @@ export default function Login() {
       toast.success("Welcome back!");
       if (res.user.user.role === "CUSTOMER") {
         router.push("/dashboard");
+        redirectAfterAuth();
+
       } else if (res.user.user.role === "ADMIN") {
         router.push("/dashboard/admin");
+        redirectAfterAuth();
+
       } else {
         router.push("/");
+        redirectAfterAuth();
       }
-      redirectAfterAuth();
     } else {
       setError("root", {
         message: res.message || "Invalid email or password. Please try again.",
@@ -98,8 +102,22 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex bg-white dark:bg-gray-950">
-      <div className="hidden lg:flex lg:w-[52%] flex-col justify-between relative overflow-hidden px-14 py-12">
+    <div className="min-h-screen flex bg-background text-foreground">
+      <div
+        className="
+        hidden lg:flex lg:w-[52%]
+        flex-col justify-between
+        relative overflow-hidden
+        px-14 py-12
+        bg-linear-to-br
+        from-primary
+        via-primary/90
+        to-indigo-700
+        dark:from-slate-900
+        dark:via-indigo-950
+        dark:to-slate-950
+      "
+      >
         {/* Background texture */}
         <div
           className="absolute inset-0 opacity-10"

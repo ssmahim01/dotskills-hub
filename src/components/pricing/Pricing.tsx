@@ -1,8 +1,5 @@
 "use client";
 
-import React from "react";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { PricingGrid } from "./PricingGrid";
 import { IPlan } from "@/redux/features/Plan/plan.api";
 
@@ -36,19 +33,6 @@ const FAQ_ITEMS = [
 export default function Pricing({ plans }: { plans: IPlan[] }) {
   return (
     <div className="bg-background min-h-screen">
-      {/* Navigation */}
-      <nav className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center">
-          <Link
-            href="/"
-            className="flex items-center gap-2 text-foreground hover:text-primary transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
-          </Link>
-        </div>
-      </nav>
-
       {/* Header */}
       <section className="py-16 px-4 text-center">
         <div className="max-w-3xl mx-auto space-y-4">
@@ -86,16 +70,7 @@ export default function Pricing({ plans }: { plans: IPlan[] }) {
             ))}
           </div>
         </div>
-      </section>     
-
-      {/* Footer */}
-      <footer className="bg-card border-t border-border mt-8">
-        <div className="max-w-6xl mx-auto px-4 py-12 text-center text-sm text-muted-foreground">
-          <p>
-            &copy; {new Date().getFullYear()} DotSkillsHub. All rights reserved.
-          </p>
-        </div>
-      </footer>
+      </section>
     </div>
   );
 }
