@@ -9,7 +9,7 @@ type User = {
   _id: string;
   email: string;
   name: string;
-  role: "CUSTOMER" | "OWNER" | "ADMIN";
+  role: "SUPER_ADMIN" | "ADMIN" | "OWNER" | "STAFF" | "CUSTOMER";
 };
 
 type UserContextType = {
@@ -32,7 +32,6 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     };
     hydrateUser();
   }, []);
-
 
   const login = (userData: any) => setUser(userData);
   const logout = async () => {

@@ -1,66 +1,83 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import {
-  Menu,
-  X,
-  LayoutDashboard,
-  ShoppingCart,
-  Users,
-  Zap,
-  Settings,
-  LogOut,
-  ChevronRight,
-  Brain,
-} from 'lucide-react';
-import { ROUTES } from '@/lib/utils/constants';
-import { useLocalStorage } from '@/lib/hooks/useLocalStorage';
-import { useUser } from '@/context/UserContext';
-import { toast } from 'sonner';
+import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, LogOut, ChevronRight } from "lucide-react";
+import { ROUTES } from "@/lib/utils/constants";
+import { useLocalStorage } from "@/lib/hooks/useLocalStorage";
+import { useUser } from "@/context/UserContext";
+import { toast } from "sonner";
+import { sidebarConfig } from "@/lib/config/sidebar.config";
 
-interface NavItem {
-  href: string;
-  label: string;
-  icon: React.ReactNode;
-  badge?: number;
-}
+// interface NavItem {
+//   href: string;
+//   label: string;
+//   icon: React.ReactNode;
+//   badge?: number;
+// }
 
-const dashboardItems: NavItem[] = [
-  { href: ROUTES.DASHBOARD, label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-  { href: ROUTES.SUBSCRIPTIONS, label: 'Subscriptions', icon: <Zap className="w-5 h-5" />, badge: 2 },
-  { href: ROUTES.PLANS, label: 'Pricing Plans', icon: <Brain className="w-5 h-5" /> },
-  { href: ROUTES.STORES, label: 'Stores', icon: <ShoppingCart className="w-5 h-5" /> },
-  { href: ROUTES.USERS, label: 'Users', icon: <Users className="w-5 h-5" /> },
-  { href: ROUTES.SETTINGS, label: 'Settings', icon: <Settings className="w-5 h-5" /> },
-];
+// const dashboardItems: NavItem[] = [
+//   {
+//     href: ROUTES.DASHBOARD,
+//     label: "Dashboard",
+//     icon: <LayoutDashboard className="w-5 h-5" />,
+//   },
+//   {
+//     href: ROUTES.SUBSCRIPTIONS,
+//     label: "Subscriptions",
+//     icon: <Zap className="w-5 h-5" />,
+//     badge: 2,
+//   },
+//   {
+//     href: ROUTES.PLANS,
+//     label: "Pricing Plans",
+//     icon: <Brain className="w-5 h-5" />,
+//   },
+//   {
+//     href: ROUTES.STORES,
+//     label: "Stores",
+//     icon: <ShoppingCart className="w-5 h-5" />,
+//   },
+//   { href: ROUTES.USERS, label: "Users", icon: <Users className="w-5 h-5" /> },
+//   {
+//     href: ROUTES.SETTINGS,
+//     label: "Settings",
+//     icon: <Settings className="w-5 h-5" />,
+//   },
+// ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-    const { logout } = useUser();
-      const router = useRouter()
+  const { user } = useUser();
+  const { logout } = useUser();
+  const router = useRouter();
+  const navigationItems =
+    user?.role === "ADMIN"
+      ? sidebarConfig.ADMIN
+      : user?.role === "OWNER"
+        ? sidebarConfig.OWNER
+        : [];
 
   const handleLogout = async () => {
     await logout();
-    toast.success("Logout successful")
-    router.push("/")
-
-  }
+    toast.success("Logout successful");
+    router.push("/");
+  };
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const { value: savedExpanded, setValue: setSavedExpanded } = useLocalStorage(
-    'dotskills_sidebar_collapsed',
-    false
+    "dotskills_sidebar_collapsed",
+    false,
   );
 
   // Initialize from localStorage
   useEffect(() => {
     if (savedExpanded !== null) {
-     setTimeout(() => {
-       setIsExpanded(!savedExpanded);
-     }, 100);
+      setTimeout(() => {
+        setIsExpanded(!savedExpanded);
+      }, 100);
     }
   }, [savedExpanded]);
 
@@ -71,7 +88,7 @@ export function Sidebar() {
   };
 
   const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + '/');
+    return pathname === href || pathname.startsWith(href + "/");
   };
 
   const sidebarContent = (
@@ -79,7 +96,10 @@ export function Sidebar() {
       {/* Header */}
       <div className="h-16 border-b border-border flex items-center justify-between px-4">
         {isExpanded && (
-          <Link href={ROUTES.DASHBOARD} className="flex items-center gap-2 font-bold text-lg">
+          <Link
+            href={ROUTES.DASHBOARD}
+            className="flex items-center gap-2 font-bold text-lg"
+          >
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
               D
             </div>
@@ -100,30 +120,35 @@ export function Sidebar() {
 
       {/* Navigation Items */}
       <nav className="flex-1 overflow-y-auto p-4 space-y-2">
-        {dashboardItems.map((item) => (
+        {navigationItems.map((item) => (
           <div key={item.href} className="relative group">
             <Link
               href={item.href}
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg
                 transition-all duration-200 relative
-                ${isActive(item.href)
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-foreground hover:bg-accent'
+                ${
+                  isActive(item.href)
+                    ? "bg-primary text-primary-foreground"
+                    : "text-foreground hover:bg-accent"
                 }
               `}
               onMouseEnter={() => !isExpanded && setHoveredItem(item.href)}
               onMouseLeave={() => setHoveredItem(null)}
             >
-              <span className="shrink-0 flex items-center justify-center">{item.icon}</span>
+              <span className="shrink-0 flex items-center justify-center">
+                {item.icon}
+              </span>
               {isExpanded && (
                 <>
-                  <span className="flex-1 text-sm font-medium">{item.label}</span>
-                  {item.badge && (
+                  <span className="flex-1 text-sm font-medium">
+                    {item.label}
+                  </span>
+                  {/* {item.badge && (
                     <span className="bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-full">
                       {item.badge}
                     </span>
-                  )}
+                  )} */}
                 </>
               )}
             </Link>
@@ -162,7 +187,7 @@ export function Sidebar() {
         className={`
           hidden md:flex flex-col bg-sidebar border-r border-border
           h-screen transition-all duration-300 fixed left-0 top-0 z-40
-          ${isExpanded ? 'w-64' : 'w-20'}
+          ${isExpanded ? "w-64" : "w-20"}
         `}
       >
         {sidebarContent}
@@ -174,7 +199,11 @@ export function Sidebar() {
           onClick={() => setIsMobileOpen(!isMobileOpen)}
           className="text-foreground p-2 rounded-lg hover:bg-accent"
         >
-          {isMobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {isMobileOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Menu className="w-6 h-6" />
+          )}
         </button>
         <span className="font-bold text-lg">DotSkills</span>
         <div className="w-10" /> {/* Spacer for alignment */}
@@ -189,7 +218,7 @@ export function Sidebar() {
           />
           <div className="fixed left-0 top-16 w-64 h-screen bg-sidebar border-r border-border z-30 md:hidden overflow-y-auto">
             <nav className="p-4 space-y-2">
-              {dashboardItems.map((item) => (
+              {navigationItems.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
@@ -197,19 +226,20 @@ export function Sidebar() {
                   className={`
                     flex items-center gap-3 px-3 py-2.5 rounded-lg
                     transition-all duration-200
-                    ${isActive(item.href)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-foreground hover:bg-accent'
+                    ${
+                      isActive(item.href)
+                        ? "bg-primary text-primary-foreground"
+                        : "text-foreground hover:bg-accent"
                     }
                   `}
                 >
                   {item.icon}
                   <span className="text-sm font-medium">{item.label}</span>
-                  {item.badge && (
+                  {/* {item.badge && (
                     <span className="ml-auto bg-destructive text-destructive-foreground text-xs font-semibold px-2 py-1 rounded-full">
                       {item.badge}
                     </span>
-                  )}
+                  )} */}
                 </Link>
               ))}
             </nav>
@@ -218,7 +248,9 @@ export function Sidebar() {
       )}
 
       {/* Spacer for desktop */}
-      <div className={`hidden md:block transition-all duration-300 ${isExpanded ? 'w-64' : 'w-20'}`} />
+      <div
+        className={`hidden md:block transition-all duration-300 ${isExpanded ? "w-64" : "w-20"}`}
+      />
 
       {/* Spacer for mobile */}
       <div className="h-16 md:hidden" />

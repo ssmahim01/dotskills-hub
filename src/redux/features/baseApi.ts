@@ -13,7 +13,10 @@ export const baseApi = createApi({
 
     "SUBSCRIPTION",
     "SUBSCRIPTIONS",
-
+    "CATEGORIES",
+    "PRODUCTS",
+    "CUSTOMERS",
+    "ORDERS",
     "STORE",
     "STORES",
   ],
