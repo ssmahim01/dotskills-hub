@@ -154,10 +154,7 @@ export function OrderTable({
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     $
-                    {order.total.toLocaleString("en-US", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
+                    {order.total}
                   </TableCell>
                   <TableCell>
                     <OrderStatusBadge status={order.status} />

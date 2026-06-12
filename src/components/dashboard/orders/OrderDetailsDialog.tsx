@@ -85,7 +85,7 @@ export function OrderDetailsDialog({
                       <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                     </div>
                     <p className="text-sm font-medium">
-                      ${item.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      ${item.total}
                     </p>
                   </div>
                 ))}
@@ -95,23 +95,23 @@ export function OrderDetailsDialog({
             <div className="border-t pt-4 space-y-2">
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>${order.subtotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>${order.subtotal}</span>
               </div>
               {order.tax > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Tax</span>
-                  <span>${order.tax.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>${order.tax}</span>
                 </div>
               )}
               {order.shippingCost > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Shipping</span>
-                  <span>${order.shippingCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                  <span>${order.shippingCost}</span>
                 </div>
               )}
               <div className="border-t pt-2 flex justify-between font-semibold">
                 <span>Total</span>
-                <span>${order.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>${order.total}</span>
               </div>
             </div>
 

@@ -5,7 +5,7 @@ import { useState, useMemo } from "react";
 import { PageHeader } from "@/components/dashboard/shared/PageHeader";
 import { ErrorState } from "@/components/dashboard/shared/ErrorState";
 import {
-  useGetAllOrdersQuery,
+  useGetMyOrdersQuery,
   useGetOrderAnalyticsQuery,
   useConfirmOrderMutation,
   useProcessOrderMutation,
@@ -49,13 +49,7 @@ export function OrderManagement() {
     isLoading: ordersLoading,
     isError: ordersError,
     error: ordersErrorObj,
-  } = useGetAllOrdersQuery({
-    page: currentPage,
-    limit: ORDER_PAGINATION_LIMIT,
-    search,
-    status: orderStatus || undefined,
-    paymentStatus: paymentStatus || undefined,
-  });
+  } = useGetMyOrdersQuery({});
 
   const { data: analyticsData, isLoading: analyticsLoading } =
     useGetOrderAnalyticsQuery({});

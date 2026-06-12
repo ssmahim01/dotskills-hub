@@ -102,6 +102,15 @@ export const orderApi = baseApi.injectEndpoints({
       }),
       providesTags: ["ORDERS"],
     }),
+    
+    getMyOrders: builder.query({
+      query: (params) => ({
+        url: "/orders/my-orders",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["ORDERS"],
+    }),
 
     getOrdersByStore: builder.query({
       query: (storeId) => ({
@@ -132,6 +141,7 @@ export const {
   useCreateOrderMutation,
   useUpdateOrderMutation,
   useConfirmOrderMutation,
+  useGetMyOrdersQuery,
   useProcessOrderMutation,
   useShipOrderMutation,
   useDeliverOrderMutation,
