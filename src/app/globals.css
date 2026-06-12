@@ -128,3 +128,149 @@
     @apply font-sans;
   }
 }
+
+@keyframes fadeIn {
+    from { opacity: 1; transform: translateY(-100px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-out forwards;
+}
+
+.primaryDark{
+  background: #2D3436;
+}
+
+.ProseMirror p {
+  line-height: 1.4;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.ProseMirror ul,
+.ProseMirror ol {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+.ProseMirror li {
+  line-height: 1.4;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.ProseMirror li p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+@keyframes moveBg {
+  0% {
+    left: -100%;
+  }
+
+  50% {
+    left: 0%;
+  }
+  100% {
+    left: -100%;
+  }
+}
+
+
+.heading-animate {
+  background: linear-gradient(90deg, #2610ff, #fffc0c, #000000);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientMove 5s linear infinite;
+}
+
+/* Add this part */
+@keyframes gradientMove {
+  0% {
+    background-position: 0 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translate3d(0,-30px,0)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+
+.elementor-element.fadeInDown {
+  animation-name: fadeDown
+}
+
+@keyframes fadeLeft {
+  from {
+    opacity: 0;
+    transform: translate3d(-30px,0,0)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+
+.elementor-element {
+  opacity: 0;
+  animation-duration: 0.8s;
+  animation-fill-mode: both;
+  animation-timing-function: ease-out;
+}
+
+.elementor-element.animate {
+  opacity: 1;
+}
+
+.elementor-element.fadeInLeft {
+  animation-name: fadeLeft
+}
+
+@keyframes fadeRight {
+  from {
+    opacity: 0;
+    transform: translate3d(30px,0,0)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+
+.elementor-element.fadeInRight {
+  animation-name: fadeRight
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0,30px,0)
+  }
+
+  to {
+    opacity: 1;
+    transform: none
+  }
+}
+
+.elementor-element.fadeInUp {
+  animation-name: fadeUp
+}

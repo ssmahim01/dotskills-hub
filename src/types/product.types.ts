@@ -4,6 +4,7 @@ export type ProductStatus = 'DRAFT' | 'ACTIVE' | 'ARCHIVED';
 // Product Model
 export interface Product {
   id: string;
+  _id?: string;
   name: string;
   slug: string;
   description: string;
@@ -11,6 +12,7 @@ export interface Product {
   sku: string;
   images: string[];
   costPrice: number;
+  price: number;
   sellingPrice: number;
   discountPrice: number | null;
   stock: number;

@@ -21,6 +21,8 @@ import {
   useArchiveProductMutation,
   useGetMyProductsQuery,
 } from "@/redux/features/Product/product.api";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export function ProductManagement() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -33,6 +35,7 @@ export function ProductManagement() {
   );
   const [featuredFilter, setFeaturedFilter] = useState<boolean | "all">("all");
   const [page, setPage] = useState(1);
+  const router = useRouter();
 
   const queryParams: ProductQueryParams = {
     page,
@@ -46,7 +49,7 @@ export function ProductManagement() {
     isLoading,
     error,
     refetch,
-  } = useGetMyProductsQuery(queryParams);
+  } = useGetMyProductsQuery({});
   const [activateProduct] = useActivateProductMutation();
   const [archiveProduct] = useArchiveProductMutation();
 
@@ -57,8 +60,7 @@ export function ProductManagement() {
   };
 
   const handleEditProduct = (product: Product) => {
-    setSelectedProduct(product);
-    setEditDialogOpen(true);
+    router.push(`/dashboard/products/edit/${product?._id ?? ""}`);
   };
 
   const handleDeleteProduct = (product: Product) => {
@@ -68,7 +70,7 @@ export function ProductManagement() {
 
   const handleActivateProduct = async (product: Product) => {
     try {
-      await activateProduct(product.id).unwrap();
+      await activateProduct(product?._id ?? "").unwrap();
       refetch();
     } catch (err) {
       console.error("Failed to activate product:", err);
@@ -77,7 +79,7 @@ export function ProductManagement() {
 
   const handleArchiveProduct = async (product: Product) => {
     try {
-      await archiveProduct(product.id).unwrap();
+      await archiveProduct(product?._id ?? "").unwrap();
       refetch();
     } catch (err) {
       console.error("Failed to archive product:", err);
@@ -113,10 +115,12 @@ export function ProductManagement() {
         description="Manage your store's product catalog"
         breadcrumbs={[{ label: "Dashboard" }, { label: "Products" }]}
         actions={
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Product
-          </Button>
+          <Link href={"/dashboard/products/create"}>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Product
+            </Button>
+          </Link>
         }
       />
 

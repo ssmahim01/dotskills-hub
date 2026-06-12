@@ -30,7 +30,7 @@ export function DeleteProductDialog({ open, product, onOpenChange, onSuccess }: 
     if (!product) return;
     try {
       setIsDeleting(true);
-      await deleteProduct(product.id).unwrap();
+      await deleteProduct(product._id ?? "").unwrap();
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
