@@ -81,12 +81,11 @@ export default function Login() {
     if (res.success) {
       login(res.user.user);
       toast.success("Welcome back!");
-      if (res.user.user.role === "CUSTOMER") {
-        router.push("/dashboard");
+      if (res.user.user.role === "OWNER") {
         redirectAfterAuth();
 
       } else if (res.user.user.role === "ADMIN") {
-        router.push("/dashboard/admin");
+        router.push("/admin");
         redirectAfterAuth();
 
       } else {
