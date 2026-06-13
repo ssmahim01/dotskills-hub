@@ -15,6 +15,7 @@ export default function Navbar() {
   const { user, logout } = useUser();
   const router = useRouter();
   const { data: myStore } = useGetMyStoreQuery();
+  // console.log(myStore);
 
   const handleLogout = async () => {
     try {
@@ -49,7 +50,7 @@ export default function Navbar() {
               <Link
                 href={
                   user?.role === "OWNER"
-                    ? `/${myStore?.data?.slug ?? ""}/dashboard`
+                    ? `/${myStore?.data?.slug}/dashboard`
                     : user?.role === "ADMIN"
                       ? "/admin"
                       : "/dashboard"

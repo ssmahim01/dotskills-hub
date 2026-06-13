@@ -3,6 +3,7 @@ import "./globals.css";
 import { initializeStorageWithSeedData } from "@/lib/services/seed-data";
 import { UserProvider } from "@/context/UserContext";
 import { ThemeProvider } from "@/lib/providers/ThemeProvider";
+import ReduxProvider from "@/providers/ReduxProvider";
 
 export const metadata: Metadata = {
   title: "DotSkillsHub - E-Commerce SaaS Platform",
@@ -41,9 +42,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="bg-background">
       <body className="font-sans antialiased bg-background text-foreground">
-        <ThemeProvider>
-          <UserProvider>{children}</UserProvider>
-        </ThemeProvider>
+        <ReduxProvider>
+          <ThemeProvider>
+            <UserProvider>{children}</UserProvider>
+          </ThemeProvider>
+        </ReduxProvider>
         {/* {process.env.NODE_ENV === 'production' && <Analytics />} */}
       </body>
     </html>
