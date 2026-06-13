@@ -29,7 +29,8 @@ interface StatCard {
   trend?: { value: number; direction: "up" | "down" };
 }
 
-export default function DashboardOverview() {
+export default function DashboardOverview({storeSlug}: {storeSlug: string}) {
+  
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState<StatCard[]>([]);
   const [recentStores, setRecentStores] = useState<any[]>([]);

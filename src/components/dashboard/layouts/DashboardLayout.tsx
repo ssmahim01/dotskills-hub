@@ -10,8 +10,10 @@ import { useUser } from "@/context/UserContext";
 
 export default function DashboardLayout({
   children,
+  storeSlug,
 }: {
   children: React.ReactNode;
+  storeSlug?: string;
 }) {
   const router = useRouter();
   const { user } = useUser();
@@ -24,22 +26,20 @@ export default function DashboardLayout({
   }, [user, router]);
 
   return (
-      <ReduxProvider>
-        {/* Sidebar */}
-        <Sidebar />
+    <ReduxProvider>
+      {/* Sidebar */}
+      <Sidebar storeSlug={storeSlug} />
 
-        {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Navbar */}
-          <Navbar />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Navbar */}
+        <Navbar />
 
-          {/* Page Content */}
-          <main className="flex-1 overflow-y-auto">
-            <div className="container mx-auto">
-              {children}
-            </div>
-          </main>
-        </div>
-      </ReduxProvider>
+        {/* Page Content */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="container mx-auto">{children}</div>
+        </main>
+      </div>
+    </ReduxProvider>
   );
 }

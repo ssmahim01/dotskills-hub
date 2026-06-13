@@ -47,7 +47,7 @@ import { sidebarConfig } from "@/lib/config/sidebar.config";
 //   },
 // ];
 
-export function Sidebar() {
+export function Sidebar({ storeSlug }: { storeSlug?: string }) {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(true);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -87,8 +87,13 @@ export function Sidebar() {
     setSavedExpanded(!newExpanded);
   };
 
+  const getPath = (href: string) =>
+    user?.role === "OWNER" ? `/${storeSlug}${href}` : href;
+
   const isActive = (href: string) => {
-    return pathname === href || pathname.startsWith(href + "/");
+    const path = getPath(href);
+
+    return pathname === path || pathname.startsWith(path + "/");
   };
 
   const sidebarContent = (
@@ -97,7 +102,11 @@ export function Sidebar() {
       <div className="h-16 border-b border-border flex items-center justify-between px-4">
         {isExpanded && (
           <Link
-            href={ROUTES.DASHBOARD}
+            href={
+              user?.role === "OWNER"
+                ? `/${storeSlug}/dashboard`
+                : ROUTES.DASHBOARD
+            }
             className="flex items-center gap-2 font-bold text-lg"
           >
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
@@ -123,7 +132,9 @@ export function Sidebar() {
         {navigationItems.map((item) => (
           <div key={item.href} className="relative group">
             <Link
-              href={item.href}
+              href={
+                user?.role === "OWNER" ? `/${storeSlug}${item.href}` : item.href
+              }
               className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-lg
                 transition-all duration-200 relative
@@ -221,7 +232,11 @@ export function Sidebar() {
               {navigationItems.map((item) => (
                 <Link
                   key={item.href}
-                  href={item.href}
+                  href={
+                    user?.role === "OWNER"
+                      ? `/${storeSlug}${item.href}`
+                      : item.href
+                  }
                   onClick={() => setIsMobileOpen(false)}
                   className={`
                     flex items-center gap-3 px-3 py-2.5 rounded-lg

@@ -20,6 +20,7 @@ export const getCurrentUser = async () => {
         name: decoded.name,
         email: decoded.email,
         role: decoded.role,
+        storeSlug: decoded.storeSlug,
       }
     );
   } catch (error) {
