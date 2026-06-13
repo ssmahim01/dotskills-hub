@@ -82,6 +82,7 @@ export default function Login() {
       login(res.user.user);
       toast.success("Welcome back!");
       if (res.user.user.role === "OWNER") {
+        router.push("/");
         redirectAfterAuth();
 
       } else if (res.user.user.role === "ADMIN") {

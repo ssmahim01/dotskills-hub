@@ -9,10 +9,12 @@ import ThemeToggle from "./ThemeToggle";
 import { LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useGetMyStoreQuery } from "@/redux/features/Store/store.api";
 
 export default function Navbar() {
   const { user, logout } = useUser();
   const router = useRouter();
+  const { data: myStore } = useGetMyStoreQuery();
 
   const handleLogout = async () => {
     try {
@@ -44,7 +46,15 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <Link href="/dashboard">
+              <Link
+                href={
+                  user?.role === "OWNER"
+                    ? `/${myStore?.data?.slug ?? ""}/dashboard`
+                    : user?.role === "ADMIN"
+                      ? "/admin"
+                      : "/dashboard"
+                }
+              >
                 <Button>Dashboard</Button>
               </Link>
 
