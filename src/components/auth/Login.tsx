@@ -24,7 +24,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuthRedirect } from "@/lib/hooks/useAuthRedirect";
-import { useGetMyStoreQuery } from "@/redux/features/Store/store.api";
 
 const loginSchema = z.object({
   email: z
@@ -66,7 +65,6 @@ export default function Login() {
   const router = useRouter();
   const { login } = useUser();
   const { redirectAfterAuth } = useAuthRedirect();
-  const { data: myStore } = useGetMyStoreQuery();
 
   const {
     register,
@@ -83,12 +81,14 @@ export default function Login() {
     if (res.success) {
       login(res.user.user);
       toast.success("Welcome back!");
-      if (res.user.user.role === "OWNER") {
-        router.push(`/${myStore?.data?.slug}/dashboard`);
+      if (res.user.user.role === "CUSTOMER") {
+        router.push("/dashboard");
         redirectAfterAuth();
+
       } else if (res.user.user.role === "ADMIN") {
-        router.push("/admin");
+        router.push("/dashboard/admin");
         redirectAfterAuth();
+
       } else {
         router.push("/");
         redirectAfterAuth();
