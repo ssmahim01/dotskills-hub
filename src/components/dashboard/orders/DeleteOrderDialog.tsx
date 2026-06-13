@@ -30,7 +30,7 @@ export function DeleteOrderDialog({ open, onOpenChange, order }: DeleteOrderDial
           <AlertDialogTitle>Delete Order</AlertDialogTitle>
           <AlertDialogDescription className="space-y-2">
             <p>
-              Are you sure you want to delete order <span className="font-semibold text-foreground">#{order?._id.slice(-8).toUpperCase()}</span>?
+              Are you sure you want to delete order <span className="font-semibold text-foreground">#{order?.orderNumber}</span>?
             </p>
             <p className="text-xs text-muted-foreground">This action cannot be undone. All order data will be permanently deleted.</p>
             {isError && (
