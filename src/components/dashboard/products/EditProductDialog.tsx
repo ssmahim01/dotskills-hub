@@ -128,7 +128,7 @@ export function EditProductDialog({
 
       await updateProduct({
         id: product.id,
-        data: formData,
+        formData,
       }).unwrap();
 
       reset();
@@ -252,7 +252,6 @@ export function EditProductDialog({
             </div>
           </div>
 
-          {/* ── Pricing & Inventory ────────────────────────────────────── */}
           <div className="space-y-4 border-b border-border pb-6">
             <h3 className="font-semibold">Pricing & Inventory</h3>
 
@@ -361,7 +360,6 @@ export function EditProductDialog({
             </div>
           </div>
 
-          {/* ── Settings ───────────────────────────────────────────────── */}
           <div className="space-y-4">
             <h3 className="font-semibold">Settings</h3>
 

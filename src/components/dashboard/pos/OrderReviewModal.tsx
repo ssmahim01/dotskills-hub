@@ -144,13 +144,13 @@ export function OrderReviewModal({
           <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl px-4 py-3 space-y-1.5 text-xs text-gray-600 dark:text-gray-400">
             <MetaRow label="Order Type" value={payload.orderType} />
             <MetaRow label="Payment" value={paymentLabel} />
-            <MetaRow label="Schedule" value={payload.schedule.type} />
+            {/* <MetaRow label="Schedule" value={payload.schedule.type} />
             {payload.schedule.type === "SCHEDULED" && payload.schedule.scheduledAt && (
               <MetaRow
                 label="Scheduled At"
                 value={new Date(payload.schedule.scheduledAt).toLocaleString()}
               />
-            )}
+            )} */}
           </div>
         </div>
 
@@ -161,7 +161,7 @@ export function OrderReviewModal({
           <Button
             onClick={onConfirm}
             disabled={isLoading}
-            className="gap-2 bg-violet-600 hover:bg-violet-700 dark:bg-violet-700 dark:hover:bg-violet-600 min-w-36"
+            className="gap-2 text-white bg-violet-600 hover:bg-violet-700 dark:bg-violet-700 dark:hover:bg-violet-600 min-w-36"
           >
             {isLoading ? (
               <>

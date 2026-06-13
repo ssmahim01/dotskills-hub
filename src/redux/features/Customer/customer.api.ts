@@ -81,6 +81,14 @@ export const customerApi = baseApi.injectEndpoints({
       }),
       providesTags: ["CUSTOMERS"],
     }),
+    getMyCustomers: builder.query<any, Record<string, any>>({
+      query: (params) => ({
+        url: "/customers/my-customers",
+        method: "GET",
+        params,
+      }),
+      providesTags: ["CUSTOMERS"],
+    }),
 
     getCustomersByStore: builder.query<
       IResponse<ICustomer[]>,
@@ -117,6 +125,7 @@ export const {
   useBlockCustomerMutation,
   useMarkCustomerAsVIPMutation,
   useDeleteCustomerMutation,
+  useGetMyCustomersQuery,
   useGetAllCustomersQuery,
   useGetCustomersByStoreQuery,
   useGetSingleCustomerQuery,

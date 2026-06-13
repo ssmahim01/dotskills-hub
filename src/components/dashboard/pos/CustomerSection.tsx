@@ -6,13 +6,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { ICustomer } from "@/types/customer.types";
-import type { CustomerFormData, OrderType } from "@/types/pos.types";
+import type { CustomerFormData } from "@/types/pos.types";
 import { useCustomerSearch } from "@/lib/hooks/useCustomerSearch";
 
 interface CustomerSectionProps {
   form: CustomerFormData;
   onChange: (data: Partial<CustomerFormData>) => void;
-  orderType: OrderType;
 }
 
 const fieldCls =
@@ -21,7 +20,6 @@ const fieldCls =
 export function CustomerSection({
   form,
   onChange,
-  orderType,
 }: CustomerSectionProps) {
   const {
     query,
@@ -47,7 +45,14 @@ export function CustomerSection({
 
   const handleClearCustomer = () => {
     clearCustomer();
-    onChange({ name: "", phone: "", email: "", address: "", city: "", zipCode: "" });
+    onChange({
+      name: "",
+      phone: "",
+      email: "",
+      address: "",
+      city: "",
+      zipCode: "",
+    });
   };
 
   return (
@@ -168,44 +173,46 @@ export function CustomerSection({
           />
         </div>
 
-        {orderType === "DELIVERY" && (
-          <>
+        <>
+          <div className="space-y-1">
+            <Label htmlFor="cs-address" className="text-xs text-gray-500">
+              Address <span className="text-rose-500">*</span>
+            </Label>
+            <Input
+              id="cs-address"
+              placeholder="Street address…"
+              value={form.address}
+              onChange={(e) => onChange({ address: e.target.value })}
+              className={fieldCls}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-2.5">
             <div className="space-y-1">
-              <Label htmlFor="cs-address" className="text-xs text-gray-500">
-                Address <span className="text-rose-500">*</span>
+              <Label htmlFor="cs-city" className="text-xs text-gray-500">
+                City
               </Label>
               <Input
-                id="cs-address"
-                placeholder="Street address…"
-                value={form.address}
-                onChange={(e) => onChange({ address: e.target.value })}
+                id="cs-city"
+                placeholder="Dhaka"
+                value={form.city ?? ""}
+                onChange={(e) => onChange({ city: e.target.value })}
                 className={fieldCls}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="space-y-1">
-                <Label htmlFor="cs-city" className="text-xs text-gray-500">City</Label>
-                <Input
-                  id="cs-city"
-                  placeholder="Dhaka"
-                  value={form.city ?? ""}
-                  onChange={(e) => onChange({ city: e.target.value })}
-                  className={fieldCls}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="cs-zip" className="text-xs text-gray-500">ZIP</Label>
-                <Input
-                  id="cs-zip"
-                  placeholder="1200"
-                  value={form.zipCode ?? ""}
-                  onChange={(e) => onChange({ zipCode: e.target.value })}
-                  className={fieldCls}
-                />
-              </div>
+            <div className="space-y-1">
+              <Label htmlFor="cs-zip" className="text-xs text-gray-500">
+                ZIP
+              </Label>
+              <Input
+                id="cs-zip"
+                placeholder="1200"
+                value={form.zipCode ?? ""}
+                onChange={(e) => onChange({ zipCode: e.target.value })}
+                className={fieldCls}
+              />
             </div>
-          </>
-        )}
+          </div>
+        </>
       </div>
     </div>
   );

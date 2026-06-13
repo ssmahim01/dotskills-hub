@@ -68,6 +68,6 @@ export interface CheckoutPayload {
   discount: number;
   deliveryCharge: number;
   notes: string;
-  schedule: ScheduleConfig;
+  
   summary: OrderSummary;
 }

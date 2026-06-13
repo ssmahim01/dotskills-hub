@@ -41,7 +41,7 @@ export function UpdateOrderDialog({
     if (open && order) {
       setTimeout(() => {
         setNotes(order.notes || "");
-        setShippingAddress(order.shippingAddress || "");
+        setShippingAddress(order.customerAddress || "");
         setPaymentMethod(order.paymentMethod || "");
       }, 100);
     }
@@ -72,7 +72,7 @@ export function UpdateOrderDialog({
         <DialogHeader>
           <DialogTitle>Update Order</DialogTitle>
           <DialogDescription>
-            Update order information for #{order?._id.slice(-8).toUpperCase()}
+            Update order information for #{order?.orderNumber ?? ""}
           </DialogDescription>
         </DialogHeader>
 
@@ -142,7 +142,11 @@ export function UpdateOrderDialog({
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="bg-violet-600 hover:bg-violet-700 dark:bg-violet-700 dark:hover:bg-violet-600 hover:cursor-pointer text-white"
+              disabled={isLoading}
+            >
               {isLoading ? "Saving..." : "Save Changes"}
             </Button>
           </div>

@@ -131,14 +131,14 @@ export function OrderTable({
           </TableHeader>
           <TableBody>
             {orders.map((order) => {
-              const isLoading = actionLoading[order._id];
+              const isLoading = actionLoading[order.orderNumber ?? ""];
               return (
                 <TableRow
                   key={order._id}
                   className="hover:bg-muted/50 transition-colors"
                 >
                   <TableCell className="font-mono text-sm font-medium">
-                    #{order._id.slice(-8).toUpperCase()}
+                    #{order.orderNumber}
                   </TableCell>
                   <TableCell>
                     <div className="space-y-0.5">
@@ -153,8 +153,7 @@ export function OrderTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
-                    $
-                    {order.total}
+                    ${order.totalAmount}
                   </TableCell>
                   <TableCell>
                     <OrderStatusBadge status={order.status} />
@@ -163,7 +162,7 @@ export function OrderTable({
                     <PaymentStatusBadge status={order.paymentStatus} />
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {new Date(order.createdAt).toLocaleDateString("en-US", {
+                    {new Date(order?.createdAt ?? "").toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "2-digit",

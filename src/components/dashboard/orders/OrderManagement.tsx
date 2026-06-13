@@ -49,7 +49,7 @@ export function OrderManagement() {
     isLoading: ordersLoading,
     isError: ordersError,
     error: ordersErrorObj,
-  } = useGetMyOrdersQuery({});
+  } = useGetMyOrdersQuery({searchTerm: search});
 
   const { data: analyticsData, isLoading: analyticsLoading } =
     useGetOrderAnalyticsQuery({});

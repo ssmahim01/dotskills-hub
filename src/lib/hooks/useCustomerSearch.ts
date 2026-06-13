@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useGetAllCustomersQuery } from "@/redux/features/Customer/customer.api";
+import { useGetMyCustomersQuery } from "@/redux/features/Customer/customer.api";
 import type { ICustomer } from "@/types/customer.types";
 import { DEBOUNCE_MS } from "../constants/pos.constants";
 
@@ -18,8 +18,8 @@ export function useCustomerSearch() {
 
   const skip = debouncedQuery.trim().length < 3;
 
-  const { data, isFetching } = useGetAllCustomersQuery(
-    { search: debouncedQuery, limit: 8 },
+  const { data, isFetching } = useGetMyCustomersQuery(
+    { searchTerm: debouncedQuery, limit: 8 },
     { skip },
   );
 

@@ -1,13 +1,13 @@
 export type OrderStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'processing'
-  | 'shipped'
-  | 'delivered'
-  | 'cancelled'
-  | 'returned';
+  | "pending"
+  | "confirmed"
+  | "processing"
+  | "shipped"
+  | "delivered"
+  | "cancelled"
+  | "returned";
 
-export type PaymentStatus = 'pending' | 'paid' | 'refunded' | 'failed';
+export type PaymentStatus = "pending" | "paid" | "refunded" | "failed";
 
 export interface IOrderItem {
   productId: string;
@@ -18,25 +18,56 @@ export interface IOrderItem {
 }
 
 export interface IOrder {
-  _id: string;
+  _id?: string;
   store: string;
-  customer: string;
+
+  orderNumber: string;
+
   customerName: string;
-  customerEmail?: string;
   customerPhone: string;
+
+  customerEmail?: string;
+
+  customerAddress?: string;
+  source: string;
+  cancelReason?: string;
+  createdBy?: string;
+  orderType: string;
+  customer: string;
+
+  notes?: string;
+
   items: IOrderItem[];
-  subtotal: number;
-  tax: number;
-  shippingCost: number;
-  total: number;
+
+  subtotalAmount: number;
+
+  deliveryCharge: number;
+
+  discountAmount: number;
+
+  totalAmount: number;
+
+  paidAmount: number;
+
+  dueAmount: number;
+
+  paymentMethod: "CASH" | "COD" | "BKASH" | "NAGAD" | "ROCKET" | "BANK";
+
   status: OrderStatus;
   paymentStatus: PaymentStatus;
-  paymentMethod?: string;
-  shippingAddress?: string;
-  trackingNumber?: string;
-  notes?: string;
-  createdAt: string;
-  updatedAt: string;
+
+  advanceAmount?: number;
+  transactionId?: string;
+
+  trackingId?: string;
+
+  deliveredAt?: Date;
+
+  isDeleted: boolean;
+
+  createdAt?: Date;
+
+  updatedAt?: Date;
 }
 
 export interface IOrderResponse {
@@ -77,7 +108,7 @@ export interface IOrderAnalyticsResponse {
 
 export type CreateOrderInput = Omit<
   IOrder,
-  '_id' | 'status' | 'paymentStatus' | 'createdAt' | 'updatedAt'
+  "_id" | "status" | "paymentStatus" | "createdAt" | "updatedAt"
 > & {
   status?: OrderStatus;
   paymentStatus?: PaymentStatus;

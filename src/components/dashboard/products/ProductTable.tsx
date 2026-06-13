@@ -87,6 +87,7 @@ export function ProductTable({
             <TableHead>SKU</TableHead>
             <TableHead className="text-right">Price</TableHead>
             <TableHead className="text-right">Stock</TableHead>
+            <TableHead className="text-right">Total Sold</TableHead>
             <TableHead className="text-center">Rating</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="w-12 text-right">Actions</TableHead>
@@ -134,17 +135,19 @@ export function ProductTable({
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex flex-col items-end">
-                  <span className="font-medium line-through">
-                    $
-                    {product.discountPrice && product.discountPrice > 0
+                  <p className="text-sm font-bold tabular-nums text-gray-900 dark:text-gray-50">
+                    ৳
+                    {(product?.discountPrice ?? 0 > 0)
                       ? product.discountPrice
                       : product.price}
-                  </span>
-                  {product.discountPrice && (
-                    <span className="text-xs text-muted-foreground">
-                      ${product.discountPrice}
-                    </span>
-                  )}
+                  </p>
+                  {product.discountPrice ??
+                    (0 > 0 && product.discountPrice) ??
+                    (0 < product.price && (
+                      <p className="text-[10px] tabular-nums text-gray-400 line-through">
+                        ৳{product.price.toLocaleString()}
+                      </p>
+                    ))}
                 </div>
               </TableCell>
               <TableCell className="text-right">
@@ -155,6 +158,11 @@ export function ProductTable({
                       Low stock
                     </span>
                   )}
+                </div>
+              </TableCell>
+              <TableCell className="text-right">
+                <div className="flex flex-col items-end">
+                  <span className="font-medium">{product.totalSold}</span>
                 </div>
               </TableCell>
               <TableCell className="text-center">

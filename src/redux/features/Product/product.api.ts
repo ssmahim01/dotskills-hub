@@ -29,22 +29,22 @@ export interface IProduct {
 export const productApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     createProduct: builder.mutation<IResponse<IProduct>, FormData>({
-      query: (data) => ({
+      query: (formData) => ({
         url: "/products/create-product",
         method: "POST",
-        data,
+        data: formData,
       }),
       invalidatesTags: ["PRODUCTS"],
     }),
 
     updateProduct: builder.mutation<
       IResponse<IProduct>,
-      { id: string; data: FormData }
+      { id: string; formData: FormData }
     >({
-      query: ({ id, data }) => ({
+      query: ({ id, formData }) => ({
         url: `/products/${id}`,
         method: "PATCH",
-        data,
+        data: formData,
       }),
       invalidatesTags: ["PRODUCTS"],
     }),

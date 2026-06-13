@@ -29,13 +29,13 @@ export function usePOSCheckout(onSuccess: () => void) {
         }
 
         // 2. Validate schedule
-        if (
-          payload.schedule.type === "SCHEDULED" &&
-          !payload.schedule.scheduledAt
-        ) {
-          toast.error("Please select a scheduled date & time");
-          return;
-        }
+        // if (
+        //   payload.schedule.type === "SCHEDULED" &&
+        //   !payload.schedule.scheduledAt
+        // ) {
+        //   toast.error("Please select a scheduled date & time");
+        //   return;
+        // }
 
         // 3. Create customer if guest (no selectedCustomer)
         let customerId: string | undefined = payload.selectedCustomer?._id;
@@ -66,6 +66,7 @@ export function usePOSCheckout(onSuccess: () => void) {
 
           paymentMethod:
             payload.paymentMethod === "CASH" ? "COD" : payload.paymentMethod,
+          advanceAmount: payload.advance.amount,
 
           deliveryCharge: payload.summary.deliveryCharge,
           discountAmount: payload.summary.discountAmount,
@@ -82,14 +83,17 @@ export function usePOSCheckout(onSuccess: () => void) {
 
         await createOrder(orderPayload).unwrap();
 
-        if (payload.schedule.type === "SCHEDULED") {
-          toast.success(
-            `Order scheduled for ${new Date(payload.schedule.scheduledAt ?? "").toLocaleString()}`,
-          );
-        } else {
-          toast.success("Order placed successfully!");
-          router.push("/dashboard/orders");
-        }
+        // if (payload.schedule.type === "SCHEDULED") {
+        //   toast.success(
+        //     `Order scheduled for ${new Date(payload.schedule.scheduledAt ?? "").toLocaleString()}`,
+        //   );
+        // } else {
+        //   toast.success("Order placed successfully!");
+        //   router.push("/dashboard/orders");
+        // }
+
+        toast.success("Order placed successfully!");
+        router.push("/dashboard/orders");
 
         onSuccess();
       } catch (err: unknown) {

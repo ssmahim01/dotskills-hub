@@ -11,7 +11,6 @@ import type {
   OrderType,
   PaymentMethod,
   AdvancePayment,
-  ScheduleConfig,
   CustomerFormData,
   CheckoutPayload,
   CartSummaryType,
@@ -62,7 +61,6 @@ export function CartSidebar({
   const [discountError, setDiscountError] = useState("");
   const [deliveryCharge, setDeliveryCharge] = useState("");
   const [notes, setNotes] = useState("");
-  const [schedule, setSchedule] = useState<ScheduleConfig>({ type: "INSTANT" });
   const [customer, setCustomer] = useState<CustomerFormData>(DEFAULT_CUSTOMER);
   const [selectedCustomer, setSelectedCustomer] = useState<ICustomer | null>(
     null,
@@ -116,7 +114,6 @@ export function CartSidebar({
     discount: discountNum,
     deliveryCharge: deliveryNum,
     notes,
-    schedule,
     summary,
   });
 
@@ -203,7 +200,6 @@ export function CartSidebar({
               onChange={(partial) =>
                 setCustomer((prev) => ({ ...prev, ...partial }))
               }
-              orderType={orderType}
             />
 
             <Separator />
@@ -225,8 +221,6 @@ export function CartSidebar({
               onDeliveryChargeChange={setDeliveryCharge}
               notes={notes}
               onNotesChange={setNotes}
-              schedule={schedule}
-              onScheduleChange={setSchedule}
             />
           </div>
         </ScrollArea>
@@ -244,11 +238,11 @@ export function CartSidebar({
           >
             <span className="flex items-center justify-center gap-2">
               Review & Place Order
-              {summary.totalAmount > 0 && (
+              {/* {summary.totalAmount > 0 && (
                 <span className="rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold tabular-nums">
                   ৳{summary.totalAmount.toFixed(2)}
                 </span>
-              )}
+              )} */}
             </span>
           </Button>
 

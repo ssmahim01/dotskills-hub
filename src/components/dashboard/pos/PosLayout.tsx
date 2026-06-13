@@ -34,7 +34,7 @@ export function POSLayout() {
   );
 
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
+    <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
         <div className="shrink-0  px-5 py-4">
           <div className="flex items-center justify-between mb-4">

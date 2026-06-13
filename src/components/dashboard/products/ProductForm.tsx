@@ -401,7 +401,6 @@ export default function ProductForm({
 
       const payload: Record<string, any> = {
         name: values.name,
-        slug: values.slug,
         sku: values.sku,
         category: values.category,
         shortDescription: values.shortDescription ?? "",
@@ -426,7 +425,7 @@ export default function ProductForm({
       setUploadProgress(80);
 
       if (isEdit && initialData?._id) {
-        await updateProduct({ id: initialData._id, data: formData }).unwrap();
+        await updateProduct({ id: initialData._id, formData }).unwrap();
         toast.success(`"${values.name}" updated successfully`);
       } else {
         await createProduct(formData).unwrap();
@@ -461,24 +460,7 @@ export default function ProductForm({
               />
             </Field>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Field
-                label="Slug"
-                error={errors.slug?.message}
-                hint="Auto-generated from name"
-                required
-              >
-                <div className="flex gap-2">
-                  <Input
-                    {...register("slug")}
-                    placeholder="product-slug"
-                    className={cn(
-                      "font-mono text-sm",
-                      errors.slug ? "border-destructive" : "",
-                    )}
-                  />
-                </div>
-              </Field>
+            
 
               <Field label="SKU" error={errors.sku?.message} required>
                 <div className="flex gap-2">
@@ -506,7 +488,6 @@ export default function ProductForm({
                   </Button>
                 </div>
               </Field>
-            </div>
 
             <Field
               label="Category"

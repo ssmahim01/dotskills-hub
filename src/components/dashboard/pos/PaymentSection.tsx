@@ -15,13 +15,11 @@ import type {
   OrderType,
   PaymentMethod,
   AdvancePayment,
-  ScheduleConfig,
 } from "@/types/pos.types";
 import {
   PAYMENT_METHODS,
-  ADVANCE_PAYMENT_METHODS,
   DEFAULT_ORDER_NOTES,
-} from "@/lib/constants/pos.constants"
+} from "@/lib/constants/pos.constants";
 
 interface PaymentSectionProps {
   orderType: OrderType;
@@ -37,8 +35,6 @@ interface PaymentSectionProps {
   onDeliveryChargeChange: (v: string) => void;
   notes: string;
   onNotesChange: (v: string) => void;
-  schedule: ScheduleConfig;
-  onScheduleChange: (s: ScheduleConfig) => void;
 }
 
 const inputCls =
@@ -58,12 +54,9 @@ export function PaymentSection({
   onDeliveryChargeChange,
   notes,
   onNotesChange,
-  schedule,
-  onScheduleChange,
 }: PaymentSectionProps) {
   return (
     <div className="space-y-5">
-
       {/* ── Order Type ── */}
       <div className="space-y-2">
         <SectionLabel>Order Type</SectionLabel>
@@ -127,7 +120,11 @@ export function PaymentSection({
             placeholder="0"
             value={discount}
             onChange={(e) => onDiscountChange(e.target.value)}
-            className={cn("pl-7 pr-8", inputCls, discountError && "border-rose-400")}
+            className={cn(
+              "pl-7 pr-8",
+              inputCls,
+              discountError && "border-rose-400",
+            )}
           />
           {discount && (
             <button
@@ -168,76 +165,22 @@ export function PaymentSection({
       {/* ── Advance Payment ── */}
       <div className="space-y-2">
         <SectionLabel>Advance Payment</SectionLabel>
-        <div className="grid grid-cols-2 gap-2">
-          <Select
-            value={advance.method ?? "NONE"}
-            onValueChange={(v) =>
-              onAdvanceChange({ method: v === "NONE" ? undefined : (v as PaymentMethod) })
-            }
-          >
-            <SelectTrigger className={inputCls}>
-              <SelectValue placeholder="Method" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="NONE">None</SelectItem>
-              {ADVANCE_PAYMENT_METHODS.map((m) => (
-                <SelectItem key={m.value} value={m.value}>
-                  {m.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 pointer-events-none">
-              ৳
-            </span>
-            <Input
-              type="number"
-              min="0"
-              step="1"
-              placeholder="0"
-              value={advance.amount || ""}
-              onChange={(e) =>
-                onAdvanceChange({ amount: Number(e.target.value) || 0 })
-              }
-              disabled={!advance.method}
-              className={cn("pl-7", inputCls, !advance.method && "opacity-50")}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Schedule ── */}
-      <div className="space-y-2">
-        <SectionLabel>Schedule</SectionLabel>
-        <div className="grid grid-cols-3 gap-1.5">
-          {(["INSTANT", "SCHEDULED", "HOLD"] as const).map((t) => (
-            <button
-              key={t}
-              onClick={() => onScheduleChange({ ...schedule, type: t })}
-              className={cn(
-                "rounded-lg py-2 px-2 text-xs font-semibold transition-all duration-200 border",
-                schedule.type === t
-                  ? "bg-violet-600 text-white border-violet-600 dark:bg-violet-700"
-                  : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-transparent",
-              )}
-            >
-              {t === "INSTANT" ? "Instant" : t === "SCHEDULED" ? "Scheduled" : "Hold"}
-            </button>
-          ))}
-        </div>
-
-        {schedule.type === "SCHEDULED" && (
+        <div className="relative">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 pointer-events-none">
+            ৳
+          </span>
           <Input
-            type="datetime-local"
-            value={schedule.scheduledAt ?? ""}
+            type="number"
+            min="0"
+            step="1"
+            placeholder="0"
+            value={advance.amount || ""}
             onChange={(e) =>
-              onScheduleChange({ ...schedule, scheduledAt: e.target.value })
+              onAdvanceChange({ amount: Number(e.target.value) || 0 })
             }
-            className={cn("text-xs", inputCls)}
+            className={cn("pl-7", inputCls, !advance.method && "opacity-50")}
           />
-        )}
+        </div>
       </div>
 
       {/* ── Notes ── */}

@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   UserRound,
   Settings,
+  Box,
 } from "lucide-react";
 
 export const sidebarConfig = {
@@ -68,6 +69,11 @@ export const sidebarConfig = {
       href: "/dashboard/orders",
       icon: <ShoppingCart className="w-5 h-5" />,
     },
+    {
+      label: "POS",
+      href: "/dashboard/pos",
+      icon: <Box className="w-5 h-5" />,
+    },
 
     {
       label: "Customers",
@@ -75,16 +81,16 @@ export const sidebarConfig = {
       icon: <UserRound className="w-5 h-5" />,
     },
 
-    {
-      label: "Store Settings",
-      href: "/dashboard/store",
-      icon: <Store className="w-5 h-5" />,
-    },
+    // {
+    //   label: "Store Settings",
+    //   href: "/dashboard/store",
+    //   icon: <Store className="w-5 h-5" />,
+    // },
 
-    {
-      label: "Settings",
-      href: "/dashboard/settings",
-      icon: <Settings className="w-5 h-5" />,
-    },
+    // {
+    //   label: "Settings",
+    //   href: "/dashboard/settings",
+    //   icon: <Settings className="w-5 h-5" />,
+    // },
   ],
 };

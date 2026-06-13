@@ -14,10 +14,10 @@ export interface Product {
   costPrice: number;
   price: number;
   sellingPrice: number;
-  discountPrice: number | null;
   stock: number;
   lowStockThreshold: number;
   totalSold: number;
+  discountPrice?: number;
   rating: number;
   isFeatured: boolean;
   status: ProductStatus;
